@@ -1,0 +1,1399 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fixed vs. Adaptive Step Size</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #f5f6f8;
+        --panel: #ffffff;
+        --ink: #14181f;
+        --muted: #5b6472;
+        --faint: #8a93a2;
+        --grid: #e7eaef;
+        --rule: #dce0e7;
+        --gd: #0b6e99; /* cerulean = fixed-step gradient descent */
+        --ada: #c81d6b; /* magenta  = adaptive step size */
+        --ada2: #e0729e; /* lighter magenta for AdaGrad's 2nd coordinate */
+        --gd-soft: rgba(11, 110, 153, 0.14);
+        --ada-soft: rgba(200, 29, 107, 0.14);
+        --warn: #c2410c; /* divergence flag */
+        --display: "Space Grotesk", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        --body: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+        --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+      }
+      body {
+        background: var(--bg);
+        color: var(--ink);
+        font-family: var(--body);
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+        padding: clamp(16px, 4vw, 48px);
+      }
+      .wrap {
+        max-width: 1140px;
+        margin: 0 auto;
+      }
+
+      header {
+        margin-bottom: 22px;
+        max-width: 820px;
+      }
+      .eyebrow {
+        font-family: var(--mono);
+        font-size: 12px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--faint);
+        margin: 0 0 10px;
+      }
+      h1 {
+        font-family: var(--display);
+        font-weight: 600;
+        letter-spacing: -0.015em;
+        font-size: clamp(26px, 4.4vw, 42px);
+        line-height: 1.08;
+        margin: 0 0 12px;
+      }
+      h1 .ada {
+        color: var(--ada);
+      }
+      h1 .g {
+        color: var(--gd);
+      }
+      .sub {
+        color: var(--muted);
+        font-size: clamp(14px, 1.6vw, 16px);
+        margin: 0;
+        max-width: 66ch;
+      }
+      .sub code {
+        font-family: var(--mono);
+        font-size: 0.9em;
+        color: var(--ink);
+        background: #eef0f4;
+        padding: 1px 5px;
+        border-radius: 4px;
+      }
+
+      .stage {
+        display: grid;
+        grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+        gap: 20px;
+        margin-top: 8px;
+      }
+      @media (max-width: 860px) {
+        .stage {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--rule);
+        border-radius: 14px;
+        padding: 16px;
+        position: relative;
+      }
+      .panel-label {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--faint);
+        margin: 0 0 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+      }
+      .panel-label .hint {
+        text-transform: none;
+        letter-spacing: 0;
+        color: var(--faint);
+        font-size: 11px;
+      }
+
+      canvas {
+        display: block;
+        width: 100%;
+        border-radius: 8px;
+        touch-action: none;
+      }
+      #plot {
+        aspect-ratio: 1/1;
+        cursor: grab;
+      }
+      #plot.dragging {
+        cursor: grabbing;
+      }
+      #conv {
+        aspect-ratio: 16/10;
+      }
+      #steps {
+        aspect-ratio: 16/7;
+      }
+
+      .rightcol {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      /* knife-edge banner: the headline stability contrast */
+      .geom-note {
+        border: 1px solid var(--rule);
+        border-radius: 10px;
+        padding: 10px 13px;
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+      .geom-note .kg {
+        color: var(--gd);
+        font-weight: 600;
+      }
+      .geom-note .kn {
+        color: var(--ada);
+        font-weight: 600;
+      }
+
+      /* readouts */
+      .readout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .stat {
+        border: 1px solid var(--rule);
+        border-radius: 10px;
+        padding: 11px 13px;
+      }
+      .stat.gd {
+        border-left: 3px solid var(--gd);
+      }
+      .stat.ada {
+        border-left: 3px solid var(--ada);
+      }
+      .stat h3 {
+        margin: 0 0 6px;
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        flex: 0 0 auto;
+      }
+      .dot.gd {
+        background: var(--gd);
+      }
+      .dot.ada {
+        background: var(--ada);
+      }
+      .stat .val {
+        font-family: var(--mono);
+        font-size: 20px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        line-height: 1.1;
+      }
+      .stat .meta {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--faint);
+        margin-top: 4px;
+        line-height: 1.45;
+      }
+      .stat .conv-flag {
+        color: var(--ada);
+        font-weight: 600;
+      }
+      .stat.gd .conv-flag {
+        color: var(--gd);
+      }
+      .stat .warn-flag {
+        color: var(--warn);
+        font-weight: 600;
+      }
+
+      /* controls */
+      .controls {
+        grid-column: 1 / -1;
+        background: var(--panel);
+        border: 1px solid var(--rule);
+        border-radius: 14px;
+        padding: 16px 18px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 18px 22px;
+        margin-top: 20px;
+      }
+      .btns {
+        display: flex;
+        gap: 8px;
+      }
+      button {
+        font-family: var(--display);
+        font-weight: 500;
+        font-size: 14px;
+        color: var(--ink);
+        background: #fff;
+        border: 1px solid var(--rule);
+        border-radius: 9px;
+        padding: 9px 15px;
+        cursor: pointer;
+        transition:
+          background 0.12s,
+          border-color 0.12s,
+          transform 0.04s;
+      }
+      button:hover {
+        background: #f0f2f5;
+        border-color: #cbd1da;
+      }
+      button:active {
+        transform: translateY(1px);
+      }
+      button.primary {
+        background: var(--ink);
+        color: #fff;
+        border-color: var(--ink);
+        min-width: 104px;
+      }
+      button.primary:hover {
+        background: #232a34;
+      }
+      button:focus-visible,
+      input:focus-visible {
+        outline: 2px solid var(--gd);
+        outline-offset: 2px;
+      }
+
+      /* segmented control: pick the adaptive rule */
+      .seg {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+      .seg > label {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .seg-btns {
+        display: inline-flex;
+        border: 1px solid var(--rule);
+        border-radius: 9px;
+        overflow: hidden;
+      }
+      .seg-btns button {
+        border: none;
+        border-radius: 0;
+        border-right: 1px solid var(--rule);
+        padding: 8px 13px;
+        font-family: var(--mono);
+        font-size: 12.5px;
+        color: var(--muted);
+        background: #fff;
+      }
+      .seg-btns button:last-child {
+        border-right: none;
+      }
+      .seg-btns button.active {
+        background: var(--ada);
+        color: #fff;
+      }
+      .seg-btns button.active:hover {
+        background: var(--ada);
+      }
+
+      .slider {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        min-width: 190px;
+        flex: 1 1 190px;
+      }
+      .slider .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+      }
+      .slider label {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .slider .num {
+        font-family: var(--mono);
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--ink);
+      }
+      input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        height: 4px;
+        border-radius: 4px;
+        background: var(--grid);
+        cursor: pointer;
+      }
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--ink);
+        border: 2px solid #fff;
+        box-shadow: 0 0 0 1px var(--rule);
+      }
+      input[type="range"]::-moz-range-thumb {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--ink);
+        border: 2px solid #fff;
+        box-shadow: 0 0 0 1px var(--rule);
+      }
+      /* step-size slider: mark the optimal step and the stability cliff */
+      .eta-wrap {
+        position: relative;
+      }
+      .eta-ticks {
+        position: relative;
+        height: 13px;
+        margin-top: 2px;
+        font-family: var(--mono);
+        font-size: 9.5px;
+        color: var(--faint);
+      }
+      .eta-ticks .tick {
+        position: absolute;
+        transform: translateX(-50%);
+        white-space: nowrap;
+        top: 0;
+      }
+      .eta-ticks .tick::before {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: -4px;
+        width: 1px;
+        height: 4px;
+        background: var(--faint);
+      }
+      .eta-ticks .tick.opt {
+        color: var(--ada);
+      }
+      .eta-ticks .tick.opt::before {
+        background: var(--ada);
+      }
+      .eta-ticks .tick.cliff {
+        color: var(--warn);
+      }
+      .eta-ticks .tick.cliff::before {
+        background: var(--warn);
+      }
+
+      .caption {
+        grid-column: 1 / -1;
+        margin-top: 20px;
+        color: var(--muted);
+        font-size: 13.5px;
+        max-width: 92ch;
+        border-top: 1px solid var(--rule);
+        padding-top: 16px;
+      }
+      .caption b {
+        color: var(--ink);
+        font-weight: 600;
+      }
+      .caption code {
+        font-family: var(--mono);
+        font-size: 0.88em;
+        color: var(--ink);
+      }
+      .caption .eq {
+        font-family: var(--mono);
+        font-size: 12.5px;
+        color: var(--ink);
+        background: #eef0f4;
+        padding: 2px 6px;
+        border-radius: 5px;
+        white-space: nowrap;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          scroll-behavior: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <p class="eyebrow">First-order methods · adaptive step size</p>
+        <h1><span class="g">A fixed step</span> gambles. <span class="ada">An adaptive step</span> doesn't.</h1>
+        <p class="sub">
+          Minimizing an ill-conditioned quadratic <code>f(x)=½(κ·x₁²+x₂²)</code> on the plane. The Hessian is <code>diag(κ,1)</code>, so gradient
+          descent is stable only for <b>η &lt; 2/L = 2/κ</b> and its best fixed step lives in a sliver just below that cliff — a sliver that narrows
+          as <code>κ</code> grows. An <b style="color: var(--ink)">adaptive</b> rule sets its own step from what it sees each iteration, so it rides
+          the fast edge without you hunting for it. Drag <b>Step size η</b> to feel the knife-edge; the adaptive path never needed the tuning.
+        </p>
+      </header>
+
+      <div class="stage">
+        <div class="panel">
+          <p class="panel-label">The surface f(x), height = value <span class="hint">drag to rotate · click to move the start</span></p>
+          <canvas id="plot"></canvas>
+        </div>
+
+        <div class="rightcol">
+          <div class="panel">
+            <p class="panel-label">Convergence · <span class="hint">f(x_k) − f★ on a log scale</span></p>
+            <canvas id="conv"></canvas>
+          </div>
+          <div class="panel">
+            <p class="panel-label">Step size vs. iteration · <span class="hint" id="steps-hint">η_k</span></p>
+            <canvas id="steps"></canvas>
+          </div>
+          <div class="geom-note" id="geom-note">measuring the step budget…</div>
+          <div class="readout">
+            <div class="stat gd">
+              <h3><span class="dot gd"></span>Gradient descent · fixed η</h3>
+              <div class="val" id="gd-val">—</div>
+              <div class="meta" id="gd-meta">—</div>
+            </div>
+            <div class="stat ada">
+              <h3><span class="dot ada"></span><span id="ada-title">Adaptive</span></h3>
+              <div class="val" id="ada-val">—</div>
+              <div class="meta" id="ada-meta">—</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="controls">
+          <div class="btns">
+            <button class="primary" id="play">Play</button>
+            <button id="step">Step</button>
+            <button id="reset">Reset</button>
+          </div>
+          <div class="seg">
+            <label>Adaptive rule</label>
+            <div class="seg-btns" id="rule">
+              <button data-rule="polyak" class="active">Polyak step</button>
+              <button data-rule="adagrad">AdaGrad</button>
+            </div>
+          </div>
+          <div class="slider" style="flex: 1 1 170px">
+            <div class="row"><label for="kappa">Condition number κ</label><span class="num" id="kappa-num">30</span></div>
+            <input type="range" id="kappa" min="3" max="60" value="30" step="1" />
+          </div>
+          <div class="slider eta-wrap" style="flex: 1 1 210px">
+            <div class="row"><label for="eta">Fixed step η</label><span class="num" id="eta-num">—</span></div>
+            <input type="range" id="eta" min="0.05" max="1.15" value="0.5" step="0.01" />
+            <div class="eta-ticks" id="eta-ticks"></div>
+          </div>
+          <div class="slider" style="flex: 0 0 auto; min-width: 130px">
+            <div class="row"><label for="speed">Speed</label><span class="num" id="speed-num">1.0×</span></div>
+            <input type="range" id="speed" min="0.25" max="6" value="1" step="0.25" />
+          </div>
+          <div class="slider" style="flex: 0 0 auto; min-width: 140px">
+            <div class="row"><label for="iter">Iteration k</label><span class="num" id="iter-num">0</span></div>
+            <input type="range" id="iter" min="0" max="220" value="0" step="1" />
+          </div>
+        </div>
+
+        <p class="caption">
+          The Hessian of <span class="eq">f(x)=½(κx₁²+x₂²)</span> is the constant <span class="eq">diag(κ,1)</span>, so the smoothness and
+          strong-convexity constants are <b>exact</b>: <span class="eq">L=κ</span>, <span class="eq">μ=1</span>, condition number
+          <span class="eq">κ=L/μ</span>. Gradient descent <span class="eq">x₊ = x − η∇f(x)</span> shrinks coordinate <span class="eq">i</span> by
+          <span class="eq">(1−ηλᵢ)</span>, so it is stable only when <span class="eq">0 &lt; η &lt; 2/L</span>. The step slider reads in units of that
+          limit: <span class="eq">η = s·(2/L)</span>, and at <span class="eq">s=1</span> the steep coordinate flips past
+          <span class="eq">−1</span> and <b>diverges</b>. The catch is that the flat coordinate only moves at rate <span class="eq">1−2s/κ</span>, so
+          to make progress you must push <span class="eq">s</span> toward the cliff — the useful band is a sliver of width
+          <span class="eq">~1/κ</span> just below <span class="eq">s=1</span>, centered on the optimum <span class="eq">η★ = 2/(μ+L)</span> with rate
+          <span class="eq">ρ = (κ−1)/(κ+1)</span> (the dashed line on the log panel; <span class="eq">f</span> falls as <span class="eq">ρ²ᵏ</span>).
+          <b>Adaptive rules remove the search.</b> The <b style="color: var(--ada)">Polyak step</b>
+          <span class="eq">ηₖ = (f(xₖ)−f★)/‖∇f(xₖ)‖²</span> keeps GD's direction but sets the length from the gap itself — nothing changes except the
+          step, and it tracks the optimal fixed rate automatically (it does need to know <span class="eq">f★</span>).
+          <b style="color: var(--ada)">AdaGrad</b> <span class="eq">Gᵢ ⟵ Gᵢ + (∂ᵢf)²</span>, <span class="eq">xᵢ₊ = xᵢ − η₀ ∂ᵢf /(√Gᵢ+ε)</span> gives
+          <i>each coordinate</i> its own shrinking step <span class="eq">η₀/√Gᵢ</span> (the lower panel), which drops faster on the steep coordinate
+          and effectively pre-conditions the geometry — it can beat any scalar fixed step early, though on a pure quadratic its
+          <span class="eq">√k</span> decay eventually slows it, and the rescaling is tied to the coordinate frame. That last method is exactly
+          <b>mirror descent under a data-dependent metric</b> — the Bregman term built from <span class="eq">diag(√Gₖ)</span> — the same
+          adaptive-geometry idea as the mirror-descent page, here read as a self-adjusting step. Faint dashed line on the log panel is the optimal
+          fixed-step rate <span class="eq">ρ²ᵏ</span>; drag <b>κ</b> to widen the gap and watch the fixed sliver thin. Drag the surface to orbit;
+          click it to move the start.
+        </p>
+      </div>
+    </div>
+
+    <script>
+      (() => {
+        "use strict";
+
+        // ======================================================================
+        // MODEL — ill-conditioned quadratic
+        //   f(x) = 1/2 (L x1^2 + mu x2^2),  L = kappa, mu = 1,  min at 0, f* = 0
+        //   grad f = (L x1, mu x2);  Hess f = diag(L, mu)  (constant -> exact L, mu)
+        // Three step rules share this f:
+        //   * fixed GD    x+ = x - eta grad,           eta = s * (2/L)
+        //   * Polyak      eta_k = (f - f*)/||grad||^2   (adaptive length, GD direction)
+        //   * AdaGrad     per-coordinate  x_i+ = x_i - eta0 g_i/(sqrt(G_i)+eps)
+        // ======================================================================
+        const MU = 1;
+        const ADA_ETA0 = 0.4; // AdaGrad global rate
+        const ADA_EPS = 1e-8;
+        const VIEW = { cx: -0.6, cy: 1.2, half: 2.7 }; // world window (square, holds start + x*)
+        const START0 = { x: -1.9, y: 3.1 }; // default start: high on the flat floor, off to the steep wall
+        const MAXITER = 220;
+        const FLOOR = 1e-14; // log-scale floor
+        const CONV = 1e-8; // "converged" threshold for the flag
+        const HGT = 3.0; // world height at the window rim (under sqrt compression)
+        const NGRID = 30; // surface mesh resolution
+        const LIFT = 0.05; // lift paths off the surface to avoid z-fighting
+        const ESCAPE = VIEW.half * 1.7; // |x-cx|,|y-cy| beyond this counts as diverged
+
+        // objective, gradient (kap = current condition number)
+        const F = (x, y, kap) => 0.5 * (kap * x * x + MU * y * y);
+        const grad = (x, y, kap) => ({ x: kap * x, y: MU * y });
+
+        // ----------------------------------------------------------------------
+        const state = {
+          kappa: 30,
+          s: 0.5, // fixed step as a fraction of the 2/L stability limit
+          etaFixed: 0.5 * (2 / 30),
+          rule: "polyak", // "polyak" | "adagrad"
+          start: { ...START0 },
+          fstar: 0,
+          fMin: 0,
+          fSpan: 1,
+          k: 0,
+          playing: false,
+          speed: 1,
+          acc: 0,
+          azim: -0.62,
+          elev: 0.72,
+          trajFix: [],
+          fFix: [],
+          divFix: -1, // first diverged index for fixed GD, else -1
+          trajAda: [],
+          fAda: [],
+          stepAda: [], // per-k step size: number (Polyak) or {x,y} (AdaGrad)
+          convK_Fix: -1,
+          convK_Ada: -1,
+          prefersReduced: window.matchMedia("(prefers-reduced-motion:reduce)").matches,
+        };
+
+        const escaped = (p) => !isFinite(p.x) || !isFinite(p.y) || Math.abs(p.x - VIEW.cx) > ESCAPE || Math.abs(p.y - VIEW.cy) > ESCAPE;
+
+        function configure() {
+          const kap = state.kappa;
+          state.etaFixed = state.s * (2 / kap); // eta = s * 2/L
+          state.fstar = 0;
+          state.fMin = 0;
+          // anchor the vertical gauge on the descent from the DEFAULT start
+          state.fSpan = Math.max(F(START0.x, START0.y, kap), 1e-6);
+        }
+
+        function compute() {
+          const kap = state.kappa;
+          const s = state.start;
+          const gap = (x, y) => Math.max(F(x, y, kap), 0); // f* = 0
+
+          // ---- fixed-step gradient descent -----------------------------------
+          {
+            const tr = [{ ...s }],
+              fv = [gap(s.x, s.y)];
+            let x = s.x,
+              y = s.y,
+              div = -1;
+            for (let i = 1; i <= MAXITER; i++) {
+              const g = grad(x, y, kap);
+              x -= state.etaFixed * g.x;
+              y -= state.etaFixed * g.y;
+              tr.push({ x, y });
+              fv.push(gap(x, y));
+              if (div < 0 && escaped({ x, y })) div = i;
+            }
+            state.trajFix = tr;
+            state.fFix = fv;
+            state.divFix = div;
+            state.convK_Fix = fv.findIndex((v) => v <= CONV);
+          }
+
+          // ---- adaptive rule -------------------------------------------------
+          {
+            const tr = [{ ...s }],
+              fv = [gap(s.x, s.y)],
+              st = [null];
+            let x = s.x,
+              y = s.y;
+            let Gx = 0,
+              Gy = 0;
+            for (let i = 1; i <= MAXITER; i++) {
+              const g = grad(x, y, kap);
+              if (state.rule === "polyak") {
+                const gg = g.x * g.x + g.y * g.y;
+                const f = F(x, y, kap) - state.fstar;
+                const eta = gg > 1e-20 ? f / gg : 0;
+                x -= eta * g.x;
+                y -= eta * g.y;
+                st.push(eta);
+              } else {
+                Gx += g.x * g.x;
+                Gy += g.y * g.y;
+                const sx = ADA_ETA0 / (Math.sqrt(Gx) + ADA_EPS);
+                const sy = ADA_ETA0 / (Math.sqrt(Gy) + ADA_EPS);
+                x -= sx * g.x;
+                y -= sy * g.y;
+                st.push({ x: sx, y: sy });
+              }
+              tr.push({ x, y });
+              fv.push(gap(x, y));
+            }
+            state.trajAda = tr;
+            state.fAda = fv;
+            state.stepAda = st;
+            state.convK_Ada = fv.findIndex((v) => v <= CONV);
+          }
+        }
+
+        // ---- canvas plumbing --------------------------------------------------
+        function fitCanvas(cv) {
+          const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+          const r = cv.getBoundingClientRect();
+          cv.width = Math.round(r.width * dpr);
+          cv.height = Math.round(r.height * dpr);
+          const ctx = cv.getContext("2d");
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          return { ctx, w: r.width, h: r.height };
+        }
+
+        const plot = document.getElementById("plot");
+        const conv = document.getElementById("conv");
+        const steps = document.getElementById("steps");
+
+        // ---- draw: 3-D surface + trajectories --------------------------------
+        // Height is sqrt((f-f*)/span): the raw quadratic is far too steep at the
+        // steep wall; the square root is monotone so it moves no level set.
+        const view = { ox: 0, oy: 0, scale: 1, ca: 1, sa: 0, se: 1, ce: 0 };
+
+        function setView(w, h) {
+          view.scale = Math.min(w, h) / (2 * VIEW.half * 1.3);
+          view.ox = w / 2;
+          view.oy = h * 0.63;
+          view.ca = Math.cos(state.azim);
+          view.sa = Math.sin(state.azim);
+          view.se = Math.sin(state.elev);
+          view.ce = Math.cos(state.elev);
+        }
+        function proj(x, y, z) {
+          const px = x - VIEW.cx,
+            py = y - VIEW.cy;
+          const u = px * view.ca - py * view.sa;
+          const v = px * view.sa + py * view.ca;
+          return { x: view.ox + u * view.scale, y: view.oy - v * view.scale * view.se - z * view.scale * view.ce, d: v };
+        }
+        const hgt = (x, y) => {
+          const u = (F(x, y, state.kappa) - state.fMin) / state.fSpan;
+          return HGT * Math.sqrt(Math.max(0, Math.min(1.2, u)));
+        };
+        const onSurface = (p) => proj(p.x, p.y, hgt(p.x, p.y) + LIFT);
+        const surfFill = (t) => `hsl(212,${18 + 10 * t}%,${97 - 20 * t}%)`;
+
+        function drawPlot() {
+          const { ctx, w, h } = fitCanvas(plot);
+          setView(w, h);
+          ctx.clearRect(0, 0, w, h);
+
+          const step = (2 * VIEW.half) / NGRID;
+          const P = [];
+          for (let i = 0; i <= NGRID; i++) {
+            const row = [],
+              x = VIEW.cx - VIEW.half + i * step;
+            for (let j = 0; j <= NGRID; j++) {
+              const y = VIEW.cy - VIEW.half + j * step;
+              const z = hgt(x, y);
+              const p = proj(x, y, z);
+              p.t = z / HGT;
+              row.push(p);
+            }
+            P.push(row);
+          }
+
+          const quads = [];
+          for (let i = 0; i < NGRID; i++) {
+            for (let j = 0; j < NGRID; j++) {
+              const a = P[i][j],
+                b = P[i + 1][j],
+                c = P[i + 1][j + 1],
+                e = P[i][j + 1];
+              quads.push({ a, b, c, e, d: (a.d + b.d + c.d + e.d) / 4, t: (a.t + b.t + c.t + e.t) / 4 });
+            }
+          }
+          quads.sort((p, q) => q.d - p.d);
+
+          ctx.lineJoin = "round";
+          ctx.lineWidth = 0.6;
+          ctx.strokeStyle = "rgba(120,132,150,.20)";
+          for (const q of quads) {
+            ctx.beginPath();
+            ctx.moveTo(q.a.x, q.a.y);
+            ctx.lineTo(q.b.x, q.b.y);
+            ctx.lineTo(q.c.x, q.c.y);
+            ctx.lineTo(q.e.x, q.e.y);
+            ctx.closePath();
+            ctx.fillStyle = surfFill(q.t);
+            ctx.fill();
+            ctx.stroke();
+          }
+
+          // optimum marker (x* = origin)
+          const o = proj(0, 0, hgt(0, 0) + LIFT);
+          ctx.strokeStyle = "#8A93A2";
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(o.x - 5, o.y - 5);
+          ctx.lineTo(o.x + 5, o.y + 5);
+          ctx.moveTo(o.x + 5, o.y - 5);
+          ctx.lineTo(o.x - 5, o.y + 5);
+          ctx.stroke();
+
+          const k = state.k;
+          // fixed GD: stop the path at divergence
+          const kFixDraw = state.divFix >= 0 ? Math.min(k, state.divFix) : k;
+          drawPath(ctx, state.trajFix, kFixDraw, getCss("--gd"), "--gd", state.divFix >= 0 && k >= state.divFix);
+          drawPath(ctx, state.trajAda, k, getCss("--ada"), "--ada", false);
+
+          // start marker
+          const st = onSurface(state.start);
+          ctx.fillStyle = "#fff";
+          ctx.strokeStyle = "#5B6472";
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(st.x, st.y, 4.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        }
+
+        function drawPath(ctx, traj, k, color, cssVar, diverged) {
+          if (k < 0) k = 0;
+          ctx.strokeStyle = color;
+          ctx.globalAlpha = 0.6;
+          ctx.lineWidth = 1.8;
+          ctx.lineJoin = "round";
+          ctx.beginPath();
+          let started = false;
+          for (let i = 0; i <= k; i++) {
+            const q = traj[i];
+            if (escaped(q)) break;
+            const p = onSurface(q);
+            started ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y);
+            started = true;
+          }
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+
+          for (let i = 0; i < k; i++) {
+            const q = traj[i];
+            if (escaped(q)) break;
+            const p = onSurface(q);
+            ctx.globalAlpha = 0.18 + 0.82 * (i / Math.max(k, 1));
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 2.1, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.globalAlpha = 1;
+
+          // head: last non-escaped point
+          let hi = Math.min(k, traj.length - 1);
+          while (hi > 0 && escaped(traj[hi])) hi--;
+          const cur = traj[hi];
+          const head = onSurface(cur);
+          const foot = proj(cur.x, cur.y, 0);
+          ctx.strokeStyle = color;
+          ctx.globalAlpha = 0.35;
+          ctx.setLineDash([3, 3]);
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(head.x, head.y);
+          ctx.lineTo(foot.x, foot.y);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.globalAlpha = 1;
+
+          ctx.fillStyle = getSoft(cssVar);
+          ctx.beginPath();
+          ctx.arc(head.x, head.y, 9, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = diverged ? getCss("--warn") : color;
+          ctx.strokeStyle = "#fff";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(head.x, head.y, 5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          // an arrow off the head when the fixed step is flying away
+          if (diverged) {
+            const nxt = traj[Math.min(hi + 1, traj.length - 1)];
+            const dir = { x: nxt.x - cur.x, y: nxt.y - cur.y };
+            const nrm = Math.hypot(dir.x, dir.y) || 1;
+            const ax = head.x + (proj(cur.x + dir.x / nrm, cur.y + dir.y / nrm, hgt(cur.x, cur.y) + LIFT).x - head.x) * 1.4;
+            const ay = head.y + (proj(cur.x + dir.x / nrm, cur.y + dir.y / nrm, hgt(cur.x, cur.y) + LIFT).y - head.y) * 1.4;
+            ctx.strokeStyle = getCss("--warn");
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(head.x, head.y);
+            ctx.lineTo(ax, ay);
+            ctx.stroke();
+          }
+        }
+
+        // screen -> world: march the view ray down and take the first hit
+        function pick(px, py) {
+          const toWorld = (z) => {
+            const u = (px - view.ox) / view.scale;
+            const v = (view.oy - py - z * view.scale * view.ce) / (view.scale * view.se);
+            return { x: u * view.ca + v * view.sa + VIEW.cx, y: -u * view.sa + v * view.ca + VIEW.cy };
+          };
+          const cl = (t, c) => Math.max(c - VIEW.half, Math.min(c + VIEW.half, t));
+          const inside = (p) => Math.abs(p.x - VIEW.cx) <= VIEW.half && Math.abs(p.y - VIEW.cy) <= VIEW.half;
+          let hit = null;
+          for (let n = 900; n >= 0; n--) {
+            const z = HGT * 1.3 * (n / 900);
+            const p = toWorld(z);
+            if (inside(p) && hgt(p.x, p.y) >= z) {
+              hit = p;
+              break;
+            }
+          }
+          if (!hit) hit = toWorld(0);
+          return { x: cl(hit.x, VIEW.cx), y: cl(hit.y, VIEW.cy) };
+        }
+
+        // ---- draw: convergence (log scale) -----------------------------------
+        function drawConv() {
+          const { ctx, w, h } = fitCanvas(conv);
+          const padL = 52,
+            padR = 14,
+            padT = 12,
+            padB = 26;
+          const plotW = w - padL - padR,
+            plotH = h - padT - padB;
+
+          ctx.clearRect(0, 0, w, h);
+
+          const top = Math.log10(Math.max(state.fFix[0], state.fAda[0], 1e-9));
+          const bot = Math.log10(FLOOR);
+          const xAt = (k) => padL + (k / MAXITER) * plotW;
+          const yRaw = (fv) => {
+            const lv = Math.log10(Math.max(fv, FLOOR));
+            return padT + (1 - (lv - bot) / (top - bot)) * plotH;
+          };
+          const yAt = (fv) => Math.max(padT - 4, Math.min(padT + plotH + 4, yRaw(fv))); // clamp so a diverging curve pegs at the ceiling
+
+          ctx.font = "500 10px " + getCss("--mono");
+          ctx.textAlign = "right";
+          ctx.textBaseline = "middle";
+          for (let e = Math.ceil(bot); e <= Math.floor(top); e += 2) {
+            const y = yRaw(Math.pow(10, e));
+            ctx.strokeStyle = "#EEF0F4";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(padL, y);
+            ctx.lineTo(w - padR, y);
+            ctx.stroke();
+            ctx.fillStyle = "#8A93A2";
+            ctx.fillText("10" + supers(e), padL - 8, y);
+          }
+
+          ctx.textAlign = "center";
+          ctx.textBaseline = "top";
+          for (let k = 0; k <= MAXITER; k += 50) {
+            const x = xAt(k);
+            ctx.strokeStyle = "#EEF0F4";
+            ctx.beginPath();
+            ctx.moveTo(x, padT);
+            ctx.lineTo(x, padT + plotH);
+            ctx.stroke();
+            ctx.fillStyle = "#8A93A2";
+            ctx.fillText(k, x, padT + plotH + 6);
+          }
+
+          // optimal fixed-step rate (dashed): f0 * rho^{2k}, rho = (k-1)/(k+1)
+          const f0 = state.fFix[0];
+          const rho = (state.kappa - 1) / (state.kappa + 1);
+          dashedRate(ctx, (k) => f0 * Math.pow(rho, 2 * k), xAt, yRaw, "#B9C1CC");
+
+          convCurve(ctx, state.fFix, Math.min(state.k, state.divFix >= 0 ? state.divFix : MAXITER), xAt, yAt, getCss("--gd"));
+          convCurve(ctx, state.fAda, state.k, xAt, yAt, getCss("--ada"));
+
+          // iteration cursor
+          const gx = xAt(state.k);
+          ctx.strokeStyle = "#C9CFD8";
+          ctx.setLineDash([3, 3]);
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(gx, padT);
+          ctx.lineTo(gx, padT + plotH);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+
+        function convCurve(ctx, arr, k, xAt, yAt, color) {
+          if (k < 0) k = 0;
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 2;
+          ctx.lineJoin = "round";
+          ctx.beginPath();
+          for (let i = 0; i <= k; i++) {
+            const x = xAt(i),
+              y = yAt(arr[i]);
+            i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+          const hx = xAt(k),
+            hy = yAt(arr[k]);
+          ctx.fillStyle = color;
+          ctx.beginPath();
+          ctx.arc(hx, hy, 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        function dashedRate(ctx, fn, xAt, yAt, color) {
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 1.25;
+          ctx.setLineDash([4, 4]);
+          ctx.beginPath();
+          for (let k = 0; k <= MAXITER; k += 2) {
+            const x = xAt(k),
+              y = yAt(fn(k));
+            k === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+
+        // ---- draw: step size vs iteration ------------------------------------
+        function drawSteps() {
+          const { ctx, w, h } = fitCanvas(steps);
+          const padL = 52,
+            padR = 14,
+            padT = 10,
+            padB = 22;
+          const plotW = w - padL - padR,
+            plotH = h - padT - padB;
+          ctx.clearRect(0, 0, w, h);
+
+          // y-range: cover the fixed step and the adaptive trace
+          let ymax = state.etaFixed;
+          for (let i = 1; i < state.stepAda.length; i++) {
+            const v = state.stepAda[i];
+            if (v == null) continue;
+            if (state.rule === "polyak") ymax = Math.max(ymax, v);
+            else ymax = Math.max(ymax, v.x, v.y);
+          }
+          ymax = Math.max(ymax * 1.15, 1e-6);
+          const xAt = (k) => padL + (k / MAXITER) * plotW;
+          const yAt = (v) => padT + (1 - v / ymax) * plotH;
+
+          // y ticks (linear, 0 and ymax)
+          ctx.font = "500 10px " + getCss("--mono");
+          ctx.textAlign = "right";
+          ctx.textBaseline = "middle";
+          for (const frac of [0, 0.5, 1]) {
+            const v = frac * ymax,
+              y = yAt(v);
+            ctx.strokeStyle = "#EEF0F4";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(padL, y);
+            ctx.lineTo(w - padR, y);
+            ctx.stroke();
+            ctx.fillStyle = "#8A93A2";
+            ctx.fillText(v.toFixed(v < 0.1 ? 3 : 2), padL - 8, y);
+          }
+          ctx.textAlign = "center";
+          ctx.textBaseline = "top";
+          for (let k = 0; k <= MAXITER; k += 50) {
+            ctx.fillStyle = "#8A93A2";
+            ctx.fillText(k, xAt(k), padT + plotH + 5);
+          }
+
+          // fixed step: flat reference line
+          const yF = yAt(state.etaFixed);
+          ctx.strokeStyle = getCss("--gd");
+          ctx.globalAlpha = 0.9;
+          ctx.setLineDash([5, 4]);
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.moveTo(padL, yF);
+          ctx.lineTo(w - padR, yF);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.globalAlpha = 1;
+
+          // adaptive step trace(s)
+          const traceLine = (pick, color) => {
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.lineJoin = "round";
+            ctx.beginPath();
+            let started = false;
+            for (let i = 1; i <= state.k; i++) {
+              const v = state.stepAda[i];
+              if (v == null) continue;
+              const x = xAt(i),
+                y = yAt(pick(v));
+              started ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+              started = true;
+            }
+            ctx.stroke();
+          };
+          if (state.rule === "polyak") {
+            traceLine((v) => v, getCss("--ada"));
+          } else {
+            traceLine((v) => v.x, getCss("--ada")); // steep coordinate
+            traceLine((v) => v.y, getCss("--ada2")); // flat coordinate
+          }
+
+          // iteration cursor
+          const cx = xAt(state.k);
+          ctx.strokeStyle = "#C9CFD8";
+          ctx.setLineDash([3, 3]);
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(cx, padT);
+          ctx.lineTo(cx, padT + plotH);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+
+        // ---- readouts ---------------------------------------------------------
+        function updateReadout() {
+          const k = state.k;
+          document.getElementById("gd-val").textContent = fmt(state.fFix[k]);
+          document.getElementById("ada-val").textContent = fmt(state.fAda[k]);
+
+          // fixed GD meta: divergence, convergence flag, or live rate
+          const gK = state.convK_Fix;
+          const diverged = state.divFix >= 0 && k >= state.divFix;
+          let gdMeta;
+          if (diverged) {
+            gdMeta = `<span class="warn-flag">✗ diverged at k=${state.divFix}</span> · η=${state.etaFixed.toFixed(3)} &gt; 2/L`;
+          } else if (gK >= 0 && k >= gK) {
+            gdMeta = `<span class="conv-flag">✓ reached 10⁻⁸ at k=${gK}</span>`;
+          } else {
+            // per-coordinate multipliers: steep |1-2s|, flat |1 - 2s/kappa|
+            const mSteep = Math.abs(1 - 2 * state.s);
+            const mFlat = Math.abs(1 - (2 * state.s) / state.kappa);
+            const worst = Math.max(mSteep, mFlat);
+            gdMeta = `η=${state.etaFixed.toFixed(3)} = ${state.s.toFixed(2)}·(2/L) · slow rate ${worst.toFixed(3)}/step`;
+          }
+          document.getElementById("gd-meta").innerHTML = gdMeta;
+
+          // adaptive meta
+          const aK = state.convK_Ada;
+          const stepNow = state.stepAda[Math.max(k, 1)] ?? state.stepAda[1];
+          let stepStr;
+          if (state.rule === "polyak") stepStr = `η_k=${(stepNow ?? 0).toFixed(3)}`;
+          else stepStr = `η_k≈(${(stepNow?.x ?? 0).toFixed(3)}, ${(stepNow?.y ?? 0).toFixed(3)})`;
+          document.getElementById("ada-meta").innerHTML =
+            aK >= 0 && k >= aK ? `<span class="conv-flag">✓ reached 10⁻⁸ at k=${aK}</span> · ${stepStr}` : stepStr;
+
+          // knife-edge banner
+          const kap = state.kappa;
+          const cliff = 2 / kap;
+          const etaStar = 2 / (MU + kap);
+          document.getElementById("geom-note").innerHTML =
+            `Stable only for <span class="kg">η &lt; 2/L = ${cliff.toFixed(3)}</span>. ` +
+            `Optimal <span class="kn">η★ = 2/(μ+L) = ${etaStar.toFixed(3)}</span>, rate <span class="kn">(κ−1)/(κ+1) = ${(
+              (kap - 1) /
+              (kap + 1)
+            ).toFixed(3)}</span>. The fast band is a sliver just under the cliff.`;
+
+          document.getElementById("iter").value = k;
+          document.getElementById("iter-num").textContent = k;
+        }
+
+        // ---- helpers ----------------------------------------------------------
+        const getCss = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+        const getSoft = (v) => (v === "--gd" ? getCss("--gd-soft") : getCss("--ada-soft"));
+        function fmt(v) {
+          if (!isFinite(v)) return "∞";
+          if (v <= 0) return "0";
+          if (v >= 1e-3 && v < 1e4) return v.toPrecision(3);
+          const e = Math.floor(Math.log10(v));
+          return (v / Math.pow(10, e)).toFixed(1) + "×10" + supers(e);
+        }
+        const SUP = { "-": "⁻", 0: "⁰", 1: "¹", 2: "²", 3: "³", 4: "⁴", 5: "⁵", 6: "⁶", 7: "⁷", 8: "⁸", 9: "⁹" };
+        const supers = (n) =>
+          String(n)
+            .split("")
+            .map((c) => SUP[c] || c)
+            .join("");
+
+        // place the η★ and cliff ticks under the step slider (in slider [0.05,1.15])
+        function placeEtaTicks() {
+          const lo = 0.05,
+            hi = 1.15;
+          const kap = state.kappa;
+          const sStar = kap / (kap + 1); // eta* as a fraction of 2/L
+          const pct = (s) => ((s - lo) / (hi - lo)) * 100;
+          const el = document.getElementById("eta-ticks");
+          el.innerHTML =
+            `<span class="tick opt" style="left:${pct(sStar).toFixed(1)}%">η★</span>` +
+            `<span class="tick cliff" style="left:${pct(1).toFixed(1)}%">2/L</span>`;
+        }
+
+        function redraw() {
+          drawPlot();
+          drawConv();
+          drawSteps();
+          updateReadout();
+        }
+        // kappa or rule change reconfigures the objective/method -> full recompute;
+        // moving the start only re-runs the trajectories.
+        function rebuild() {
+          configure();
+          compute();
+          state.k = 0;
+          placeEtaTicks();
+          redraw();
+        }
+        function rebuildStart() {
+          compute();
+          state.k = 0;
+          redraw();
+        }
+        // eta slider changes only the fixed trajectory (adaptive is independent)
+        function rebuildEta() {
+          configure();
+          compute();
+          state.k = 0;
+          redraw();
+        }
+
+        // ---- animation --------------------------------------------------------
+        let last = 0;
+        function loop(t) {
+          if (state.playing) {
+            const dt = last ? (t - last) / 1000 : 0;
+            state.acc += dt * state.speed * 24;
+            while (state.acc >= 1 && state.k < MAXITER) {
+              state.k++;
+              state.acc -= 1;
+            }
+            if (state.k >= MAXITER) {
+              state.playing = false;
+              playBtn.textContent = "Replay";
+            }
+            redraw();
+          }
+          last = t;
+          requestAnimationFrame(loop);
+        }
+
+        // ---- controls ---------------------------------------------------------
+        const playBtn = document.getElementById("play");
+        function setPlaying(on) {
+          if (on && state.k >= MAXITER) state.k = 0;
+          state.playing = on;
+          state.acc = 0;
+          playBtn.textContent = on ? "Pause" : state.k >= MAXITER ? "Replay" : "Play";
+        }
+        playBtn.addEventListener("click", () => setPlaying(!state.playing));
+        document.getElementById("step").addEventListener("click", () => {
+          setPlaying(false);
+          state.k = Math.min(state.k + 1, MAXITER);
+          redraw();
+        });
+        document.getElementById("reset").addEventListener("click", () => {
+          setPlaying(false);
+          state.k = 0;
+          redraw();
+        });
+
+        // adaptive-rule segmented control
+        document.getElementById("rule").addEventListener("click", (e) => {
+          const btn = e.target.closest("button");
+          if (!btn) return;
+          state.rule = btn.dataset.rule;
+          [...e.currentTarget.children].forEach((b) => b.classList.toggle("active", b === btn));
+          document.getElementById("ada-title").textContent = state.rule === "polyak" ? "Polyak step" : "AdaGrad";
+          document.getElementById("steps-hint").textContent = state.rule === "polyak" ? "η_k (scalar)" : "η₀/√G per coordinate — steep vs. flat";
+          setPlaying(false);
+          rebuild();
+        });
+
+        const kappaEl = document.getElementById("kappa");
+        kappaEl.addEventListener("input", () => {
+          state.kappa = +kappaEl.value;
+          document.getElementById("kappa-num").textContent = state.kappa;
+          setPlaying(false);
+          rebuild();
+        });
+        const etaEl = document.getElementById("eta");
+        function syncEtaLabel() {
+          document.getElementById("eta-num").textContent = `${state.etaFixed.toFixed(3)} (${state.s.toFixed(2)}·2/L)`;
+        }
+        etaEl.addEventListener("input", () => {
+          state.s = +etaEl.value;
+          configure();
+          syncEtaLabel();
+          setPlaying(false);
+          rebuildEta();
+        });
+        const speedEl = document.getElementById("speed");
+        speedEl.addEventListener("input", () => {
+          state.speed = +speedEl.value;
+          document.getElementById("speed-num").textContent = state.speed.toFixed(2).replace(/0$/, "") + "×";
+        });
+        const iterEl = document.getElementById("iter");
+        iterEl.addEventListener("input", () => {
+          setPlaying(false);
+          state.k = +iterEl.value;
+          redraw();
+        });
+
+        // drag to orbit; a click without a drag moves the start
+        let drag = null;
+        plot.addEventListener("pointerdown", (e) => {
+          plot.setPointerCapture(e.pointerId);
+          plot.classList.add("dragging");
+          drag = { x: e.clientX, y: e.clientY, azim: state.azim, elev: state.elev, moved: 0 };
+        });
+        plot.addEventListener("pointermove", (e) => {
+          if (!drag) return;
+          const dx = e.clientX - drag.x,
+            dy = e.clientY - drag.y;
+          drag.moved = Math.max(drag.moved, Math.hypot(dx, dy));
+          state.azim = drag.azim + dx * 0.008;
+          state.elev = Math.max(0.3, Math.min(1.45, drag.elev + dy * 0.006));
+          drawPlot();
+        });
+        plot.addEventListener("pointerup", (e) => {
+          if (!drag) return;
+          const wasClick = drag.moved < 4;
+          drag = null;
+          plot.classList.remove("dragging");
+          if (!wasClick) return;
+          const r = plot.getBoundingClientRect();
+          state.start = pick(e.clientX - r.left, e.clientY - r.top);
+          setPlaying(false);
+          rebuildStart();
+        });
+        plot.addEventListener("pointercancel", () => {
+          drag = null;
+          plot.classList.remove("dragging");
+        });
+
+        // keyboard
+        window.addEventListener("keydown", (e) => {
+          if (e.target.tagName === "INPUT") return;
+          if (e.code === "Space") {
+            e.preventDefault();
+            setPlaying(!state.playing);
+          } else if (e.code === "ArrowRight") {
+            setPlaying(false);
+            state.k = Math.min(state.k + 1, MAXITER);
+            redraw();
+          } else if (e.code === "ArrowLeft") {
+            setPlaying(false);
+            state.k = Math.max(state.k - 1, 0);
+            redraw();
+          } else if (e.key.toLowerCase() === "r") {
+            setPlaying(false);
+            state.k = 0;
+            redraw();
+          }
+        });
+
+        let rt;
+        window.addEventListener("resize", () => {
+          clearTimeout(rt);
+          rt = setTimeout(redraw, 80);
+        });
+
+        // ---- dev assertions: catch a mistyped gradient or a broken update ----
+        (function selfCheck() {
+          const kap = 30,
+            eps = 1e-6;
+          const p = { x: 0.7, y: -1.3 };
+          const gA = grad(p.x, p.y, kap);
+          const gx = (F(p.x + eps, p.y, kap) - F(p.x - eps, p.y, kap)) / (2 * eps);
+          const gy = (F(p.x, p.y + eps, kap) - F(p.x, p.y - eps, kap)) / (2 * eps);
+          const errs = [Math.abs(gA.x - gx), Math.abs(gA.y - gy)];
+
+          // fixed GD must diverge for s>1 and converge for a healthy s
+          const sim = (s) => {
+            const eta = s * (2 / kap);
+            let x = 1,
+              y = 1;
+            for (let i = 0; i < 400; i++) {
+              const g = grad(x, y, kap);
+              x -= eta * g.x;
+              y -= eta * g.y;
+            }
+            return F(x, y, kap);
+          };
+          const conv = sim(0.9),
+            div = sim(1.05);
+          if (!(conv < 1e-3)) console.warn("[adaptive-step] healthy step did not converge:", conv);
+          if (!(div > 1e3 || !isFinite(div))) console.warn("[adaptive-step] s>1 did not diverge:", div);
+
+          // Polyak step is positive and finite away from the optimum
+          const g0 = grad(1, 1, kap),
+            polyak = F(1, 1, kap) / (g0.x * g0.x + g0.y * g0.y);
+          if (!(polyak > 0 && isFinite(polyak))) console.warn("[adaptive-step] bad Polyak step:", polyak);
+
+          const bad = Math.max(...errs);
+          if (bad > 1e-4) console.warn("[adaptive-step] gradient self-check exceeded tolerance:", errs);
+        })();
+
+        // ---- go ---------------------------------------------------------------
+        syncEtaLabel();
+        document.getElementById("ada-title").textContent = "Polyak step";
+        document.getElementById("steps-hint").textContent = "η_k (scalar)";
+        rebuild();
+        requestAnimationFrame(loop);
+        if (!state.prefersReduced) setTimeout(() => setPlaying(true), 400);
+      })();
+    </script>
+  </body>
+</html>

@@ -40,6 +40,17 @@ nav_order: 1
   ></iframe>
 </div>
 
+## Adaptivity
+
+<div class="embed-frame">
+  <iframe
+    id="adaptive"
+    src="{{ '/assets/html/adaptive-rule.html' | relative_url }}"
+    title="Fixed step gradient descent vs. adaptive gradient descent"
+    loading="lazy"
+  ></iframe>
+</div>
+
 <style>
   .embed-frame {
     margin: 1.5rem 0;
