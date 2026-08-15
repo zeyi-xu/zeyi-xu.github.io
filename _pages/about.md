@@ -33,7 +33,6 @@ Put your address / P.O. box / other info right below your picture. You can also 
 
 Link to your social media connections, too. This theme is set up to use [Font Awesome icons](https://fontawesome.com/) and [Academicons](https://jpswalsh.github.io/academicons/), like the ones below. Add your Facebook, Twitter, LinkedIn, Google Scholar, or just disable all of them. -->
 
-
 I am a PhD student in the [Department of Mathematics](https://www.math.uci.edu/) at the [University of California, Irvine](https://uci.edu/), advised by [Professor Long Chen](https://www.math.uci.edu/~chenlong/).
 
 My research focuses on optimization theory, with an emphasis on the design and convergence analysis of accelerated first-order methods. Feel free to reach out via email — I'm always happy to discuss.
