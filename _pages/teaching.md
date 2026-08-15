@@ -2,14 +2,14 @@
 layout: page
 permalink: /teaching/
 title: teaching
-description: Courses taught and mentoring at the University of California, Irvine.
+description: Teaching assistantships and mentoring at the University of California, Irvine.
 nav: true
 nav_order: 2
 ---
 
-## Courses
+## Teaching assistantships
 
-All courses taught in the Department of Mathematics, University of California, Irvine.
+Teaching assistant for the following courses in the Department of Mathematics, University of California, Irvine, listed most recent first.
 
 | Term        | Course    | Title                             |
 | ----------- | --------- | --------------------------------- |
