@@ -22,7 +22,7 @@ nav_order: 1
 <div class="embed-frame">
   <iframe
     id="mirror"
-    src="{{ '/assets/html/mirror.html' | relative_url }}"
+    src="{{ '/assets/html/mirror-vs-gd.html' | relative_url }}"
     title="Mirror"
     loading="lazy"
   ></iframe>
