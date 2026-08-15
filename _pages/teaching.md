@@ -2,14 +2,31 @@
 layout: page
 permalink: /teaching/
 title: teaching
-description: Course materials, schedules, and resources for classes taught.
-nav: false
-nav_order: 6
-calendar: true
+description: Courses taught and mentoring at the University of California, Irvine.
+nav: true
+nav_order: 2
 ---
 
-This page displays a collection of courses with detailed schedules, materials, and resources. You can organize your courses by years, terms, or topics.
+## Courses
 
-{% include calendar.liquid calendar_id='test@gmail.com' timezone='Asia/Shanghai' %}
+All courses taught in the Department of Mathematics, University of California, Irvine.
 
-{% include courses.liquid %}
+| Term        | Course    | Title                             |
+| ----------- | --------- | --------------------------------- |
+| 2026 Winter | MATH 290C | Methods in Applied Mathematics    |
+| 2025 Fall   | MATH 2B   | Single-Variable Calculus II       |
+| 2025 Summer | MATH 105A | Numerical Analysis I              |
+| 2025 Summer | MATH 3D   | Elementary Differential Equations |
+| 2025 Spring | MATH 290C | Methods in Applied Mathematics    |
+| 2025 Winter | MATH 130A | Probability I                     |
+| 2024 Fall   | MATH 130A | Probability I                     |
+| 2024 Spring | MATH 2D   | Multivariable Calculus I          |
+| 2024 Winter | MATH 2D   | Multivariable Calculus I          |
+| 2023 Fall   | MATH 2D   | Multivariable Calculus I          |
+| 2023 Summer | MATH 105B | Numerical Analysis II             |
+| 2023 Spring | MATH 2E   | Multivariable Calculus II         |
+
+## Mentoring
+
+**Directed Reading Program (DRP)** — Fall 2024
+Mentored an undergraduate reading project on the mathematical foundations of machine learning.
