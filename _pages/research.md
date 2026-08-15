@@ -21,6 +21,7 @@ nav_order: 1
 
 
 <p> Below are some visualizations of the different optimization techniques. Have fun exploring!</p>
+
 ## Acceleration
 
 <div class="embed-frame">
