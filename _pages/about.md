@@ -13,7 +13,7 @@ profile:
     <p>University of California, Irvine</p>
     <p>Irvine, CA 92697</p>
 
-selected_papers: true # includes a list of papers marked as "selected={true}"
+selected_papers: false # rendered manually below so that conference talks can follow it
 social: true # includes social icons at the bottom of the page
 
 announcements:
@@ -36,3 +36,13 @@ Link to your social media connections, too. This theme is set up to use [Font Aw
 I am a PhD student in the [Department of Mathematics](https://www.math.uci.edu/) at the [University of California, Irvine](https://uci.edu/), advised by [Professor Long Chen](https://www.math.uci.edu/~chenlong/).
 
 My research focuses on large-scale optimization and its applications, with an emphasis on the design and convergence analysis of accelerated first-order methods. Feel free to reach out via email — I'm always happy to discuss.
+
+<h2><a href="{{ '/publications/' | relative_url }}" style="color: inherit">selected publications</a></h2>
+
+{% include selected_papers.liquid %}
+
+## conferences
+
+- **[SOCAMS 2026](https://www.socams.org/)** — Southern California Applied Mathematics Symposium, Loyola Marymount University, Los Angeles, CA, April 25, 2026. Contributed talk: _Accelerating Sinkhorn for Entropy-Regularized Optimal Transport_.
+- **[SOCAMS 2025](https://www.socams.org/)** — Southern California Applied Mathematics Symposium, University of California, Riverside, April 26, 2025. Contributed talk: _Adaptive Accelerated Gradient Descent Methods for Convex Optimization_.
+- **[NSF–CBMS Regional Research Conference](https://cbmsweb.org/regional-conferences/conference-series-events-2023/)** — _Deep Learning and Numerical PDEs_, principal lecturer Jinchao Xu, Morgan State University, Baltimore, MD, June 19–23, 2023.
