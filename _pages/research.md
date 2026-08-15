@@ -5,6 +5,15 @@ title: research
 nav: true
 nav_order: 1
 ---
+My research focuses on large-scale optimization, with an emphasis on the design and convergence analysis of accelerated first-order methods. 
+
+Gradient descent is a simple and widely used optimization method, but it can be slow to converge. We can accelerate the convergence of gradient descent using various techniques:
+
+* Momentum methods, such as Nesterov's accelerated gradient method, which uses a combination of the current and previous gradients to update the parameters.
+* Mirror descent, which uses a different geometry to update the parameters, allowing for faster convergence in certain cases.
+* Adaptive methods, such as AdaGrad and Adam, which adjust the learning rate based on the history of gradients.
+
+My research aims to combine these techniques in a principled way to design new optimization algorithms that are both fast and robust.
 
 ## Acceleration
 
