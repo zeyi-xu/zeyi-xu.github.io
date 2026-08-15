@@ -23,7 +23,7 @@ nav_order: 1
   <iframe
     id="mirror"
     src="{{ '/assets/html/mirror-vs-gd.html' | relative_url }}"
-    title="Mirror"
+    title="Gradient descent vs. mirror descent"
     loading="lazy"
   ></iframe>
 </div>
