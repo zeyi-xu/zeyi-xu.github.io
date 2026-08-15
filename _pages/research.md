@@ -17,9 +17,6 @@ nav_order: 1
 
 <p>My research aims to combine these techniques in a principled way to design new optimization algorithms that are both fast and robust.</p>
 
-
-
-
 <p> Below are some visualizations of the different optimization techniques. Have fun exploring!</p>
 
 ## Acceleration
