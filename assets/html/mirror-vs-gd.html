@@ -379,8 +379,9 @@
         <p class="sub">
           Minimizing <code>f(x)=¼‖Ex‖⁴+¼‖Ax−b‖₄⁴+½‖Cx−d‖²</code> on the plane. The quartic terms make the Hessian grow without bound, so
           <b style="color: var(--ink)">f has no finite global Lipschitz constant</b> and Euclidean gradient descent has no honest global step. The
-          reference <code>h(x)=¼‖x‖⁴+½‖x‖²</code> matches that growth: <code>f</code> is smooth <i>and</i> strongly convex <b style="color: var(--ink)">relative to
-          h</b> (Lu–Freund–Nesterov, arXiv:1610.05708), which buys linear convergence. Same problem, two metrics — and the metric is what conditions it.
+          reference <code>h(x)=¼‖x‖⁴+½‖x‖²</code> matches that growth: <code>f</code> is smooth <i>and</i> strongly convex
+          <b style="color: var(--ink)">relative to h</b> (Lu–Freund–Nesterov, arXiv:1610.05708), which buys linear convergence. Same problem, two
+          metrics — and the metric is what conditions it.
         </p>
       </header>
 
@@ -432,22 +433,22 @@
 
         <p class="caption">
           The two quartic blocks behave like a <span class="eq">‖·‖⁴</span> bowl whose curvature explodes toward the rim, so the Euclidean Hessian's
-          largest eigenvalue is huge at the edges of the window and small in the basin — a wildly varying second-order picture that no single Lipschitz
-          constant can honestly bound. The reference <span class="eq">h=¼‖x‖⁴+½‖x‖²</span> grows at the same quartic rate, and the whole story is the
-          <b>ratio of the two Hessians</b>: <span class="eq">∇²f ⪯ L∇²h</span> and <span class="eq">∇²f ⪰ μ∇²h</span> hold with modest
-          <span class="eq">L</span>, <span class="eq">μ</span>, so in the <b>h-metric</b> the condition number
-          <span class="eq">κ = L/μ</span> is small even though the Euclidean one is enormous. Both constants here are <b>measured over the window</b>
-          from the Hessians, not assumed: Euclidean uses the extreme eigenvalues of <span class="eq">∇²f</span>; mirror uses the extreme eigenvalues of
-          <span class="eq">∇²h<sup>−½</sup> ∇²f ∇²h<sup>−½</sup></span>. Gradient descent steps <span class="eq">x₊ = x − (1/L)∇f(x)</span> with the tiny
-          Euclidean step; mirror descent takes the same-shaped step in the dual variable —
-          <span class="eq">θ = ∇h(x) − (1/L)∇f(x)</span>, <span class="eq">x₊ = (∇h)⁻¹(θ)</span> — where
+          largest eigenvalue is huge at the edges of the window and small in the basin — a wildly varying second-order picture that no single
+          Lipschitz constant can honestly bound. The reference <span class="eq">h=¼‖x‖⁴+½‖x‖²</span> grows at the same quartic rate, and the whole
+          story is the <b>ratio of the two Hessians</b>: <span class="eq">∇²f ⪯ L∇²h</span> and <span class="eq">∇²f ⪰ μ∇²h</span> hold with modest
+          <span class="eq">L</span>, <span class="eq">μ</span>, so in the <b>h-metric</b> the condition number <span class="eq">κ = L/μ</span> is
+          small even though the Euclidean one is enormous. Both constants here are <b>measured over the window</b> from the Hessians, not assumed:
+          Euclidean uses the extreme eigenvalues of <span class="eq">∇²f</span>; mirror uses the extreme eigenvalues of
+          <span class="eq">∇²h<sup>−½</sup> ∇²f ∇²h<sup>−½</sup></span
+          >. Gradient descent steps <span class="eq">x₊ = x − (1/L)∇f(x)</span> with the tiny Euclidean step; mirror descent takes the same-shaped
+          step in the dual variable — <span class="eq">θ = ∇h(x) − (1/L)∇f(x)</span>, <span class="eq">x₊ = (∇h)⁻¹(θ)</span> — where
           <span class="eq">∇h(x) = (1+‖x‖²)x</span> and its inverse is a radial Cardano solve. On the log panel the two slopes are the payoff: mirror
           descent falls linearly at rate <span class="eq">(1−μ/L)ᵏ</span> in the h-metric, while Euclidean descent's rate
-          <span class="eq">(1−μ/L)ᵏ</span> is glacial because its <span class="eq">L</span> is inflated by the quartic corners. Drag <b>Quartic strength</b>
-          up to scale <span class="eq">A</span> and watch the Euclidean condition number explode while the mirror one barely moves. One honest caveat:
-          <i>without</i> relative strong convexity both methods are only <span class="eq">O(1/k)</span>; the linear rate you see here comes from the
-          <span class="eq">¼‖Ex‖⁴</span> term making <span class="eq">f</span> strongly convex relative to <span class="eq">h</span>. The faint dashed lines
-          are the measured worst-case rates. Drag the surface itself to orbit the camera.
+          <span class="eq">(1−μ/L)ᵏ</span> is glacial because its <span class="eq">L</span> is inflated by the quartic corners. Drag
+          <b>Quartic strength</b> up to scale <span class="eq">A</span> and watch the Euclidean condition number explode while the mirror one barely
+          moves. One honest caveat: <i>without</i> relative strong convexity both methods are only <span class="eq">O(1/k)</span>; the linear rate you
+          see here comes from the <span class="eq">¼‖Ex‖⁴</span> term making <span class="eq">f</span> strongly convex relative to
+          <span class="eq">h</span>. The faint dashed lines are the measured worst-case rates. Drag the surface itself to orbit the camera.
         </p>
       </div>
     </div>
