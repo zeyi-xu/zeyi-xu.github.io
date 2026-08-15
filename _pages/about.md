@@ -35,4 +35,4 @@ Link to your social media connections, too. This theme is set up to use [Font Aw
 
 I am a PhD student in the [Department of Mathematics](https://www.math.uci.edu/) at the [University of California, Irvine](https://uci.edu/), advised by [Professor Long Chen](https://www.math.uci.edu/~chenlong/).
 
-My research focuses on optimization theory, with an emphasis on the design and convergence analysis of accelerated first-order methods. Feel free to reach out via email — I'm always happy to discuss.
+My research focuses on large-scale optimization, with an emphasis on the design and convergence analysis of accelerated first-order methods. Feel free to reach out via email — I'm always happy to discuss.
