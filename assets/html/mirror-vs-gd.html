@@ -1,0 +1,1254 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gradient Descent vs. Mirror Descent</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #f5f6f8;
+        --panel: #ffffff;
+        --ink: #14181f;
+        --muted: #5b6472;
+        --faint: #8a93a2;
+        --grid: #e7eaef;
+        --rule: #dce0e7;
+        --gd: #0b6e99; /* cerulean = Euclidean GD */
+        --nes: #c81d6b; /* magenta  = mirror descent */
+        --gd-soft: rgba(11, 110, 153, 0.14);
+        --nes-soft: rgba(200, 29, 107, 0.14);
+        --display: "Space Grotesk", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        --body: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+        --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+      }
+      body {
+        background: var(--bg);
+        color: var(--ink);
+        font-family: var(--body);
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+        padding: clamp(16px, 4vw, 48px);
+      }
+      .wrap {
+        max-width: 1140px;
+        margin: 0 auto;
+      }
+
+      header {
+        margin-bottom: 22px;
+        max-width: 780px;
+      }
+      .eyebrow {
+        font-family: var(--mono);
+        font-size: 12px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--faint);
+        margin: 0 0 10px;
+      }
+      h1 {
+        font-family: var(--display);
+        font-weight: 600;
+        letter-spacing: -0.015em;
+        font-size: clamp(26px, 4.4vw, 42px);
+        line-height: 1.08;
+        margin: 0 0 12px;
+      }
+      h1 .n {
+        color: var(--nes);
+      }
+      h1 .g {
+        color: var(--gd);
+      }
+      .sub {
+        color: var(--muted);
+        font-size: clamp(14px, 1.6vw, 16px);
+        margin: 0;
+        max-width: 64ch;
+      }
+      .sub code {
+        font-family: var(--mono);
+        font-size: 0.9em;
+        color: var(--ink);
+        background: #eef0f4;
+        padding: 1px 5px;
+        border-radius: 4px;
+      }
+
+      .stage {
+        display: grid;
+        grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+        gap: 20px;
+        margin-top: 8px;
+      }
+      @media (max-width: 860px) {
+        .stage {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--rule);
+        border-radius: 14px;
+        padding: 16px;
+        position: relative;
+      }
+      .panel-label {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--faint);
+        margin: 0 0 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+      }
+      .panel-label .hint {
+        text-transform: none;
+        letter-spacing: 0;
+        color: var(--faint);
+        font-size: 11px;
+      }
+
+      canvas {
+        display: block;
+        width: 100%;
+        border-radius: 8px;
+        touch-action: none;
+      }
+      #plot {
+        aspect-ratio: 1/1;
+        cursor: grab;
+      }
+      #plot.dragging {
+        cursor: grabbing;
+      }
+      #conv {
+        aspect-ratio: 4/3;
+      }
+
+      .rightcol {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      /* condition-number banner: the headline geometry contrast */
+      .geom-note {
+        border: 1px solid var(--rule);
+        border-radius: 10px;
+        padding: 10px 13px;
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+      .geom-note .kg {
+        color: var(--gd);
+        font-weight: 600;
+      }
+      .geom-note .kn {
+        color: var(--nes);
+        font-weight: 600;
+      }
+
+      /* readouts */
+      .readout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .stat {
+        border: 1px solid var(--rule);
+        border-radius: 10px;
+        padding: 11px 13px;
+      }
+      .stat.gd {
+        border-left: 3px solid var(--gd);
+      }
+      .stat.nes {
+        border-left: 3px solid var(--nes);
+      }
+      .stat h3 {
+        margin: 0 0 6px;
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        flex: 0 0 auto;
+      }
+      .dot.gd {
+        background: var(--gd);
+      }
+      .dot.nes {
+        background: var(--nes);
+      }
+      .stat .val {
+        font-family: var(--mono);
+        font-size: 20px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        line-height: 1.1;
+      }
+      .stat .meta {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--faint);
+        margin-top: 4px;
+      }
+      .stat .conv-flag {
+        color: var(--nes);
+        font-weight: 600;
+      }
+      .stat.gd .conv-flag {
+        color: var(--gd);
+      }
+
+      /* controls */
+      .controls {
+        grid-column: 1 / -1;
+        background: var(--panel);
+        border: 1px solid var(--rule);
+        border-radius: 14px;
+        padding: 16px 18px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 18px 22px;
+        margin-top: 20px;
+      }
+      .btns {
+        display: flex;
+        gap: 8px;
+      }
+      button {
+        font-family: var(--display);
+        font-weight: 500;
+        font-size: 14px;
+        color: var(--ink);
+        background: #fff;
+        border: 1px solid var(--rule);
+        border-radius: 9px;
+        padding: 9px 15px;
+        cursor: pointer;
+        transition:
+          background 0.12s,
+          border-color 0.12s,
+          transform 0.04s;
+      }
+      button:hover {
+        background: #f0f2f5;
+        border-color: #cbd1da;
+      }
+      button:active {
+        transform: translateY(1px);
+      }
+      button.primary {
+        background: var(--ink);
+        color: #fff;
+        border-color: var(--ink);
+        min-width: 104px;
+      }
+      button.primary:hover {
+        background: #232a34;
+      }
+      button:focus-visible,
+      input:focus-visible {
+        outline: 2px solid var(--gd);
+        outline-offset: 2px;
+      }
+
+      .slider {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        min-width: 190px;
+        flex: 1 1 190px;
+      }
+      .slider .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+      }
+      .slider label {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .slider .num {
+        font-family: var(--mono);
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--ink);
+      }
+      input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        height: 4px;
+        border-radius: 4px;
+        background: var(--grid);
+        cursor: pointer;
+      }
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--ink);
+        border: 2px solid #fff;
+        box-shadow: 0 0 0 1px var(--rule);
+      }
+      input[type="range"]::-moz-range-thumb {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--ink);
+        border: 2px solid #fff;
+        box-shadow: 0 0 0 1px var(--rule);
+      }
+
+      .caption {
+        grid-column: 1 / -1;
+        margin-top: 20px;
+        color: var(--muted);
+        font-size: 13.5px;
+        max-width: 88ch;
+        border-top: 1px solid var(--rule);
+        padding-top: 16px;
+      }
+      .caption b {
+        color: var(--ink);
+        font-weight: 600;
+      }
+      .caption code {
+        font-family: var(--mono);
+        font-size: 0.88em;
+        color: var(--ink);
+      }
+      .caption .eq {
+        font-family: var(--mono);
+        font-size: 12.5px;
+        color: var(--ink);
+        background: #eef0f4;
+        padding: 2px 6px;
+        border-radius: 5px;
+        white-space: nowrap;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          scroll-behavior: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <p class="eyebrow">Relatively-smooth first-order methods</p>
+        <h1><span class="g">Gradient descent</span> vs. <span class="n">Mirror descent</span></h1>
+        <p class="sub">
+          Minimizing <code>f(x)=¼‖Ex‖⁴+¼‖Ax−b‖₄⁴+½‖Cx−d‖²</code> on the plane. The quartic terms make the Hessian grow without bound, so
+          <b style="color: var(--ink)">f has no finite global Lipschitz constant</b> and Euclidean gradient descent has no honest global step. The
+          reference <code>h(x)=¼‖x‖⁴+½‖x‖²</code> matches that growth: <code>f</code> is smooth <i>and</i> strongly convex <b style="color: var(--ink)">relative to
+          h</b> (Lu–Freund–Nesterov, arXiv:1610.05708), which buys linear convergence. Same problem, two metrics — and the metric is what conditions it.
+        </p>
+      </header>
+
+      <div class="stage">
+        <div class="panel">
+          <p class="panel-label">The surface f(x), height = value <span class="hint">drag to rotate · click to move the start</span></p>
+          <canvas id="plot"></canvas>
+        </div>
+
+        <div class="rightcol">
+          <div class="panel">
+            <p class="panel-label">Convergence · <span class="hint">f(x_k) − f★ on a log scale</span></p>
+            <canvas id="conv"></canvas>
+          </div>
+          <div class="geom-note" id="geom-note">measuring geometry…</div>
+          <div class="readout">
+            <div class="stat gd">
+              <h3><span class="dot gd"></span>Gradient descent · Euclidean</h3>
+              <div class="val" id="gd-val">—</div>
+              <div class="meta" id="gd-meta">measured over the window</div>
+            </div>
+            <div class="stat nes">
+              <h3><span class="dot nes"></span>Mirror descent · h-geometry</h3>
+              <div class="val" id="nes-val">—</div>
+              <div class="meta" id="nes-meta">measured over the window</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="controls">
+          <div class="btns">
+            <button class="primary" id="play">Play</button>
+            <button id="step">Step</button>
+            <button id="reset">Reset</button>
+          </div>
+          <div class="slider">
+            <div class="row"><label for="q">Quartic strength</label><span class="num" id="q-num">1.0</span></div>
+            <input type="range" id="q" min="0.6" max="2.2" value="1" step="0.05" />
+          </div>
+          <div class="slider">
+            <div class="row"><label for="speed">Speed</label><span class="num" id="speed-num">1.0×</span></div>
+            <input type="range" id="speed" min="0.25" max="6" value="1" step="0.25" />
+          </div>
+          <div class="slider" style="flex: 0 0 auto; min-width: 150px">
+            <div class="row"><label for="iter">Iteration k</label><span class="num" id="iter-num">0</span></div>
+            <input type="range" id="iter" min="0" max="250" value="0" step="1" />
+          </div>
+        </div>
+
+        <p class="caption">
+          The two quartic blocks behave like a <span class="eq">‖·‖⁴</span> bowl whose curvature explodes toward the rim, so the Euclidean Hessian's
+          largest eigenvalue is huge at the edges of the window and small in the basin — a wildly varying second-order picture that no single Lipschitz
+          constant can honestly bound. The reference <span class="eq">h=¼‖x‖⁴+½‖x‖²</span> grows at the same quartic rate, and the whole story is the
+          <b>ratio of the two Hessians</b>: <span class="eq">∇²f ⪯ L∇²h</span> and <span class="eq">∇²f ⪰ μ∇²h</span> hold with modest
+          <span class="eq">L</span>, <span class="eq">μ</span>, so in the <b>h-metric</b> the condition number
+          <span class="eq">κ = L/μ</span> is small even though the Euclidean one is enormous. Both constants here are <b>measured over the window</b>
+          from the Hessians, not assumed: Euclidean uses the extreme eigenvalues of <span class="eq">∇²f</span>; mirror uses the extreme eigenvalues of
+          <span class="eq">∇²h<sup>−½</sup> ∇²f ∇²h<sup>−½</sup></span>. Gradient descent steps <span class="eq">x₊ = x − (1/L)∇f(x)</span> with the tiny
+          Euclidean step; mirror descent takes the same-shaped step in the dual variable —
+          <span class="eq">θ = ∇h(x) − (1/L)∇f(x)</span>, <span class="eq">x₊ = (∇h)⁻¹(θ)</span> — where
+          <span class="eq">∇h(x) = (1+‖x‖²)x</span> and its inverse is a radial Cardano solve. On the log panel the two slopes are the payoff: mirror
+          descent falls linearly at rate <span class="eq">(1−μ/L)ᵏ</span> in the h-metric, while Euclidean descent's rate
+          <span class="eq">(1−μ/L)ᵏ</span> is glacial because its <span class="eq">L</span> is inflated by the quartic corners. Drag <b>Quartic strength</b>
+          up to scale <span class="eq">A</span> and watch the Euclidean condition number explode while the mirror one barely moves. One honest caveat:
+          <i>without</i> relative strong convexity both methods are only <span class="eq">O(1/k)</span>; the linear rate you see here comes from the
+          <span class="eq">¼‖Ex‖⁴</span> term making <span class="eq">f</span> strongly convex relative to <span class="eq">h</span>. The faint dashed lines
+          are the measured worst-case rates. Drag the surface itself to orbit the camera.
+        </p>
+      </div>
+    </div>
+
+    <script>
+      (() => {
+        "use strict";
+
+        // ======================================================================
+        // MODEL — 2-D relatively-smooth quartic example (Lu-Freund-Nesterov)
+        //   f(x) = 1/4 (||Ex||^2)^2 + 1/4 * sum_i (a_i.x - b_i)^4 + 1/2 ||Cx-d||^2
+        //   h(x) = 1/4 ||x||^4 + 1/2 ||x||^2         (reference / mirror potential)
+        // f is L-smooth AND mu-strongly convex RELATIVE to h -> linear convergence.
+        // The quartic blocks make ||Hessian|| blow up, so no finite Euclidean L.
+        // ======================================================================
+        const E = [
+          [0.9, 0.2],
+          [0.1, 0.8],
+        ];
+        const A0 = [
+          [1.4, 0.4],
+          [0.3, 1.3],
+          [1.0, -0.8],
+        ]; // three quartic residual pieces
+        const bvec = [0.4, -0.3, 0.2];
+        const Cm = [
+          [0.7, 0.0],
+          [0.0, 0.6],
+        ];
+        const dvec = [0.2, -0.1];
+
+        // constant blocks E^T E and C^T C (symmetric, stored as [00,01,11])
+        const EtE = [E[0][0] ** 2 + E[1][0] ** 2, E[0][0] * E[0][1] + E[1][0] * E[1][1], E[0][1] ** 2 + E[1][1] ** 2];
+        const CtC = [Cm[0][0] ** 2 + Cm[1][0] ** 2, Cm[0][0] * Cm[0][1] + Cm[1][0] * Cm[1][1], Cm[0][1] ** 2 + Cm[1][1] ** 2];
+
+        const VIEW = { cx: -1.15, cy: 1.15, half: 3.9 }; // world window (holds start + x*)
+        const START0 = { x: -2.5723, y: 2.6666 }; // default start, out on the quartic rim
+        const MAXITER = 250;
+        const FLOOR = 1e-14; // log-scale floor (mirror descent dives past 1e-15)
+        const CONV = 1e-8; // "converged" threshold for the flag
+        const HGT = 3.2; // world height at the window rim (under sqrt compression)
+        const NGRID = 30; // surface mesh resolution
+        const LIFT = 0.05; // lift paths off the surface to avoid z-fighting
+
+        const Evec = (x, y) => [E[0][0] * x + E[0][1] * y, E[1][0] * x + E[1][1] * y];
+
+        // objective value; Aq is A scaled by the quartic-strength slider
+        function F(x, y, Aq) {
+          const e = Evec(x, y);
+          const ee = e[0] * e[0] + e[1] * e[1];
+          let q4 = 0;
+          for (let i = 0; i < Aq.length; i++) {
+            const r = Aq[i][0] * x + Aq[i][1] * y - bvec[i];
+            q4 += r * r * r * r;
+          }
+          const s0 = Cm[0][0] * x + Cm[0][1] * y - dvec[0],
+            s1 = Cm[1][0] * x + Cm[1][1] * y - dvec[1];
+          return 0.25 * ee * ee + 0.25 * q4 + 0.5 * (s0 * s0 + s1 * s1);
+        }
+        function grad(x, y, Aq) {
+          const e = Evec(x, y);
+          const ee = e[0] * e[0] + e[1] * e[1];
+          // E^T e
+          const ete0 = E[0][0] * e[0] + E[1][0] * e[1],
+            ete1 = E[0][1] * e[0] + E[1][1] * e[1];
+          let gx = ee * ete0,
+            gy = ee * ete1;
+          for (let i = 0; i < Aq.length; i++) {
+            const r = Aq[i][0] * x + Aq[i][1] * y - bvec[i];
+            const r3 = r * r * r;
+            gx += r3 * Aq[i][0];
+            gy += r3 * Aq[i][1];
+          }
+          const s0 = Cm[0][0] * x + Cm[0][1] * y - dvec[0],
+            s1 = Cm[1][0] * x + Cm[1][1] * y - dvec[1];
+          gx += Cm[0][0] * s0 + Cm[1][0] * s1;
+          gy += Cm[0][1] * s0 + Cm[1][1] * s1;
+          return { x: gx, y: gy };
+        }
+        function hess(x, y, Aq) {
+          const e = Evec(x, y);
+          const ee = e[0] * e[0] + e[1] * e[1];
+          const ete0 = E[0][0] * e[0] + E[1][0] * e[1],
+            ete1 = E[0][1] * e[0] + E[1][1] * e[1];
+          // (e.e) E^T E + 2 (E^T e)(E^T e)^T
+          let h00 = ee * EtE[0] + 2 * ete0 * ete0;
+          let h01 = ee * EtE[1] + 2 * ete0 * ete1;
+          let h11 = ee * EtE[2] + 2 * ete1 * ete1;
+          // + 3 sum_i r_i^2 a_i a_i^T
+          for (let i = 0; i < Aq.length; i++) {
+            const r = Aq[i][0] * x + Aq[i][1] * y - bvec[i];
+            const w = 3 * r * r;
+            h00 += w * Aq[i][0] * Aq[i][0];
+            h01 += w * Aq[i][0] * Aq[i][1];
+            h11 += w * Aq[i][1] * Aq[i][1];
+          }
+          // + C^T C
+          h00 += CtC[0];
+          h01 += CtC[1];
+          h11 += CtC[2];
+          return [h00, h01, h11];
+        }
+
+        // --- reference function h and its mirror map -------------------------
+        // grad h(x) = (1 + ||x||^2) x   (radial); Hess h = (1+||x||^2)I + 2 x x^T
+        const gradh = (x, y) => {
+          const n = x * x + y * y;
+          return { x: (1 + n) * x, y: (1 + n) * y };
+        };
+        const hessh = (x, y) => {
+          const n = x * x + y * y;
+          return [1 + n + 2 * x * x, 2 * x * y, 1 + n + 2 * y * y];
+        };
+        // inverse mirror map: given theta, its preimage is radial x = (t/||theta||) theta
+        // where t = ||x|| solves t^3 + t - ||theta|| = 0 (unique real root, Cardano).
+        // The n-D inverse reduces to this 1-D solve — the part most easily gotten wrong.
+        function invGradh(tx, ty) {
+          const rho = Math.hypot(tx, ty);
+          if (rho < 1e-14) return { x: 0, y: 0 };
+          const D = Math.sqrt((rho * rho) / 4 + 1 / 27);
+          const t = Math.cbrt(rho / 2 + D) + Math.cbrt(rho / 2 - D);
+          return { x: (t / rho) * tx, y: (t / rho) * ty };
+        }
+
+        // --- symmetric 2x2 eigen tools --------------------------------------
+        // eigenvalue range of [a,b,c] = [[a,b],[b,c]]
+        function eigRange([a, b, c]) {
+          const t = a + c;
+          const s = Math.sqrt(Math.max(0, ((a - c) * (a - c)) / 4 + b * b));
+          return [t / 2 - s, t / 2 + s];
+        }
+        // full eigendecomposition of symmetric 2x2 -> {w:[lo,hi], V:[vlo,vhi]}
+        function eigSym([a, b, c]) {
+          const t = a + c;
+          const s = Math.sqrt(Math.max(0, ((a - c) * (a - c)) / 4 + b * b));
+          const lo = t / 2 - s,
+            hi = t / 2 + s;
+          let vlo, vhi;
+          if (Math.abs(b) > 1e-14) {
+            let n0 = Math.hypot(b, lo - a);
+            vlo = [b / n0, (lo - a) / n0];
+            let n1 = Math.hypot(b, hi - a);
+            vhi = [b / n1, (hi - a) / n1];
+          } else if (a <= c) {
+            vlo = [1, 0];
+            vhi = [0, 1];
+          } else {
+            vlo = [0, 1];
+            vhi = [1, 0];
+          }
+          return { w: [lo, hi], V: [vlo, vhi] };
+        }
+        // eigenvalue range of the RELATIVE operator  Hh^{-1/2} Hf Hh^{-1/2}
+        // (its extremes over the window are the relative smoothness L and strong
+        // convexity mu that condition mirror descent).
+        function relEigRange(Hf, Hh) {
+          const { w, V } = eigSym(Hh);
+          const a0 = 1 / Math.sqrt(w[0]),
+            a1 = 1 / Math.sqrt(w[1]);
+          const v0 = V[0],
+            v1 = V[1];
+          // Hh^{-1/2} = a0 v0 v0^T + a1 v1 v1^T  (symmetric [p,q,r])
+          const p = a0 * v0[0] * v0[0] + a1 * v1[0] * v1[0];
+          const q = a0 * v0[0] * v0[1] + a1 * v1[0] * v1[1];
+          const r = a0 * v0[1] * v0[1] + a1 * v1[1] * v1[1];
+          const A = Hf[0],
+            B = Hf[1],
+            C = Hf[2];
+          // T = Hf * Hi
+          const T00 = A * p + B * q,
+            T01 = A * q + B * r,
+            T10 = B * p + C * q,
+            T11 = B * q + C * r;
+          // M = Hi * T  (symmetric)
+          const M00 = p * T00 + q * T10;
+          const M01 = p * T01 + q * T11;
+          const M10 = q * T00 + r * T10;
+          const M11 = q * T01 + r * T11;
+          return eigRange([M00, (M01 + M10) / 2, M11]);
+        }
+
+        // ----------------------------------------------------------------------
+        const state = {
+          q: 1.0, // quartic-strength slider
+          Aq: A0.map((r) => r.slice()),
+          LG: 1,
+          muG: 1,
+          LR: 1,
+          muR: 1, // measured window extremes (Euclidean / relative)
+          kappaG: 1,
+          kappaR: 1,
+          alphaGD: 0.1,
+          alphaMD: 0.1,
+          xstar: { x: 0, y: 0 },
+          fstar: 0,
+          fMin: 0,
+          fSpan: 1,
+          start: { ...START0 },
+          k: 0,
+          playing: false,
+          speed: 1,
+          acc: 0,
+          azim: -0.62,
+          elev: 0.72,
+          trajGD: [],
+          trajMD: [],
+          fGD: [],
+          fMD: [],
+          convK_GD: -1,
+          convK_MD: -1,
+          prefersReduced: window.matchMedia("(prefers-reduced-motion:reduce)").matches,
+        };
+
+        function newtonMin(Aq) {
+          let x = 0,
+            y = 0;
+          for (let it = 0; it < 80; it++) {
+            const g = grad(x, y, Aq),
+              [a, b, c] = hess(x, y, Aq);
+            const det = a * c - b * b;
+            x -= (c * g.x - b * g.y) / det;
+            y -= (-b * g.x + a * g.y) / det;
+          }
+          return { x, y };
+        }
+
+        // sweep the window for the curvature extremes in BOTH metrics
+        function scanWindow(Aq) {
+          let LG = 0,
+            muG = Infinity,
+            LR = 0,
+            muR = Infinity;
+          const N = 64,
+            step = (2 * VIEW.half) / N;
+          for (let i = 0; i <= N; i++)
+            for (let j = 0; j <= N; j++) {
+              const x = VIEW.cx - VIEW.half + i * step,
+                y = VIEW.cy - VIEW.half + j * step;
+              const Hf = hess(x, y, Aq);
+              const [lo, hi] = eigRange(Hf);
+              if (hi > LG) LG = hi;
+              if (lo < muG) muG = lo;
+              const [rlo, rhi] = relEigRange(Hf, hessh(x, y));
+              if (rhi > LR) LR = rhi;
+              if (rlo < muR) muR = rlo;
+            }
+          return { LG, muG, LR, muR };
+        }
+
+        function configure() {
+          state.Aq = A0.map((r) => [r[0] * state.q, r[1] * state.q]);
+          const { LG, muG, LR, muR } = scanWindow(state.Aq);
+          state.LG = LG;
+          state.muG = muG;
+          state.LR = LR;
+          state.muR = muR;
+          state.kappaG = LG / muG;
+          state.kappaR = LR / muR;
+          state.alphaGD = 1 / LG;
+          state.alphaMD = 1 / LR;
+          state.xstar = newtonMin(state.Aq);
+          state.fstar = F(state.xstar.x, state.xstar.y, state.Aq);
+          state.fMin = state.fstar;
+          // anchor the vertical gauge on the descent from the DEFAULT start, so the
+          // valley uses the full sqrt range and the far quartic wall just clips.
+          state.fSpan = Math.max(F(START0.x, START0.y, state.Aq) - state.fstar, 1e-6);
+        }
+
+        function compute() {
+          const { alphaGD, alphaMD, Aq, fstar } = state;
+          const s = state.start;
+          const gap = (p) => Math.max(F(p.x, p.y, Aq) - fstar, 0);
+
+          // Euclidean gradient descent
+          const gx = [{ ...s }],
+            gf = [gap(s)];
+          let x = { ...s };
+          for (let i = 1; i <= MAXITER; i++) {
+            const g = grad(x.x, x.y, Aq);
+            x = { x: x.x - alphaGD * g.x, y: x.y - alphaGD * g.y };
+            gx.push(x);
+            gf.push(gap(x));
+          }
+
+          // mirror descent: dual step then inverse mirror map
+          const mx = [{ ...s }],
+            mf = [gap(s)];
+          x = { ...s };
+          for (let i = 1; i <= MAXITER; i++) {
+            const g = grad(x.x, x.y, Aq);
+            const gh = gradh(x.x, x.y);
+            x = invGradh(gh.x - alphaMD * g.x, gh.y - alphaMD * g.y);
+            mx.push(x);
+            mf.push(gap(x));
+          }
+
+          state.trajGD = gx;
+          state.fGD = gf;
+          state.trajMD = mx;
+          state.fMD = mf;
+          state.convK_GD = gf.findIndex((v) => v <= CONV);
+          state.convK_MD = mf.findIndex((v) => v <= CONV);
+        }
+
+        // ---- canvas plumbing --------------------------------------------------
+        function fitCanvas(cv) {
+          const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+          const r = cv.getBoundingClientRect();
+          cv.width = Math.round(r.width * dpr);
+          cv.height = Math.round(r.height * dpr);
+          const ctx = cv.getContext("2d");
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          return { ctx, w: r.width, h: r.height };
+        }
+
+        const plot = document.getElementById("plot");
+        const conv = document.getElementById("conv");
+
+        // ---- draw: 3-D surface + trajectories --------------------------------
+        // Height is sqrt((f-f*)/span): the raw quartic surface is far too steep at
+        // the rim; the square root is monotone so it moves no level set.
+        const view = { ox: 0, oy: 0, scale: 1, ca: 1, sa: 0, se: 1, ce: 0 };
+
+        function setView(w, h) {
+          view.scale = Math.min(w, h) / (2 * VIEW.half * 1.3);
+          view.ox = w / 2;
+          view.oy = h * 0.63;
+          view.ca = Math.cos(state.azim);
+          view.sa = Math.sin(state.azim);
+          view.se = Math.sin(state.elev);
+          view.ce = Math.cos(state.elev);
+        }
+        function proj(x, y, z) {
+          const px = x - VIEW.cx,
+            py = y - VIEW.cy;
+          const u = px * view.ca - py * view.sa;
+          const v = px * view.sa + py * view.ca;
+          return { x: view.ox + u * view.scale, y: view.oy - v * view.scale * view.se - z * view.scale * view.ce, d: v };
+        }
+        const hgt = (x, y) => {
+          const u = (F(x, y, state.Aq) - state.fMin) / state.fSpan;
+          return HGT * Math.sqrt(Math.max(0, Math.min(1.2, u)));
+        };
+        const onSurface = (p) => proj(p.x, p.y, hgt(p.x, p.y) + LIFT);
+        const surfFill = (t) => `hsl(212,${18 + 10 * t}%,${97 - 20 * t}%)`;
+
+        function drawPlot() {
+          const { ctx, w, h } = fitCanvas(plot);
+          setView(w, h);
+          ctx.clearRect(0, 0, w, h);
+
+          const step = (2 * VIEW.half) / NGRID;
+          const P = [];
+          for (let i = 0; i <= NGRID; i++) {
+            const row = [],
+              x = VIEW.cx - VIEW.half + i * step;
+            for (let j = 0; j <= NGRID; j++) {
+              const y = VIEW.cy - VIEW.half + j * step;
+              const z = hgt(x, y);
+              const p = proj(x, y, z);
+              p.t = z / HGT;
+              row.push(p);
+            }
+            P.push(row);
+          }
+
+          const quads = [];
+          for (let i = 0; i < NGRID; i++) {
+            for (let j = 0; j < NGRID; j++) {
+              const a = P[i][j],
+                b = P[i + 1][j],
+                c = P[i + 1][j + 1],
+                e = P[i][j + 1];
+              quads.push({ a, b, c, e, d: (a.d + b.d + c.d + e.d) / 4, t: (a.t + b.t + c.t + e.t) / 4 });
+            }
+          }
+          quads.sort((p, q) => q.d - p.d);
+
+          ctx.lineJoin = "round";
+          ctx.lineWidth = 0.6;
+          ctx.strokeStyle = "rgba(120,132,150,.20)";
+          for (const q of quads) {
+            ctx.beginPath();
+            ctx.moveTo(q.a.x, q.a.y);
+            ctx.lineTo(q.b.x, q.b.y);
+            ctx.lineTo(q.c.x, q.c.y);
+            ctx.lineTo(q.e.x, q.e.y);
+            ctx.closePath();
+            ctx.fillStyle = surfFill(q.t);
+            ctx.fill();
+            ctx.stroke();
+          }
+
+          // optimum marker
+          const o = proj(state.xstar.x, state.xstar.y, hgt(state.xstar.x, state.xstar.y) + LIFT);
+          ctx.strokeStyle = "#8A93A2";
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(o.x - 5, o.y - 5);
+          ctx.lineTo(o.x + 5, o.y + 5);
+          ctx.moveTo(o.x + 5, o.y - 5);
+          ctx.lineTo(o.x - 5, o.y + 5);
+          ctx.stroke();
+
+          const k = state.k;
+          drawPath(ctx, state.trajGD, k, getCss("--gd"), "--gd");
+          drawPath(ctx, state.trajMD, k, getCss("--nes"), "--nes");
+
+          // start marker
+          const s = onSurface(state.start);
+          ctx.fillStyle = "#fff";
+          ctx.strokeStyle = "#5B6472";
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, 4.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        }
+
+        function drawPath(ctx, traj, k, color, cssVar) {
+          ctx.strokeStyle = color;
+          ctx.globalAlpha = 0.6;
+          ctx.lineWidth = 1.8;
+          ctx.lineJoin = "round";
+          ctx.beginPath();
+          for (let i = 0; i <= k; i++) {
+            const p = onSurface(traj[i]);
+            i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y);
+          }
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+
+          for (let i = 0; i < k; i++) {
+            const p = onSurface(traj[i]);
+            ctx.globalAlpha = 0.18 + 0.82 * (i / Math.max(k, 1));
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 2.1, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.globalAlpha = 1;
+
+          const cur = traj[k];
+          const head = onSurface(cur);
+          const foot = proj(cur.x, cur.y, 0);
+          ctx.strokeStyle = color;
+          ctx.globalAlpha = 0.35;
+          ctx.setLineDash([3, 3]);
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(head.x, head.y);
+          ctx.lineTo(foot.x, foot.y);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.globalAlpha = 1;
+
+          ctx.fillStyle = getSoft(cssVar);
+          ctx.beginPath();
+          ctx.arc(head.x, head.y, 9, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = color;
+          ctx.strokeStyle = "#fff";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(head.x, head.y, 5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        }
+
+        // screen -> world: march the view ray down and take the first hit
+        function pick(px, py) {
+          const toWorld = (z) => {
+            const u = (px - view.ox) / view.scale;
+            const v = (view.oy - py - z * view.scale * view.ce) / (view.scale * view.se);
+            return { x: u * view.ca + v * view.sa + VIEW.cx, y: -u * view.sa + v * view.ca + VIEW.cy };
+          };
+          const cl = (t, c) => Math.max(c - VIEW.half, Math.min(c + VIEW.half, t));
+          const inside = (p) => Math.abs(p.x - VIEW.cx) <= VIEW.half && Math.abs(p.y - VIEW.cy) <= VIEW.half;
+          let hit = null;
+          for (let n = 900; n >= 0; n--) {
+            const z = HGT * 1.3 * (n / 900);
+            const p = toWorld(z);
+            if (inside(p) && hgt(p.x, p.y) >= z) {
+              hit = p;
+              break;
+            }
+          }
+          if (!hit) hit = toWorld(0);
+          return { x: cl(hit.x, VIEW.cx), y: cl(hit.y, VIEW.cy) };
+        }
+
+        // ---- draw: convergence (log scale) -----------------------------------
+        function drawConv() {
+          const { ctx, w, h } = fitCanvas(conv);
+          const padL = 52,
+            padR = 14,
+            padT = 12,
+            padB = 30;
+          const plotW = w - padL - padR,
+            plotH = h - padT - padB;
+
+          ctx.clearRect(0, 0, w, h);
+
+          const top = Math.log10(Math.max(state.fGD[0], state.fMD[0], 1e-9));
+          const bot = Math.log10(FLOOR);
+          const xAt = (k) => padL + (k / MAXITER) * plotW;
+          const yAt = (fv) => {
+            const lv = Math.log10(Math.max(fv, FLOOR));
+            return padT + (1 - (lv - bot) / (top - bot)) * plotH;
+          };
+
+          ctx.font = "500 10px " + getCss("--mono");
+          ctx.textAlign = "right";
+          ctx.textBaseline = "middle";
+          for (let e = Math.ceil(bot); e <= Math.floor(top); e += 2) {
+            const y = yAt(Math.pow(10, e));
+            ctx.strokeStyle = "#EEF0F4";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(padL, y);
+            ctx.lineTo(w - padR, y);
+            ctx.stroke();
+            ctx.fillStyle = "#8A93A2";
+            ctx.fillText("10" + supers(e), padL - 8, y);
+          }
+
+          ctx.textAlign = "center";
+          ctx.textBaseline = "top";
+          ctx.fillStyle = "#8A93A2";
+          for (let k = 0; k <= MAXITER; k += 50) {
+            const x = xAt(k);
+            ctx.strokeStyle = "#EEF0F4";
+            ctx.beginPath();
+            ctx.moveTo(x, padT);
+            ctx.lineTo(x, padT + plotH);
+            ctx.stroke();
+            ctx.fillText(k, x, padT + plotH + 7);
+          }
+
+          // measured worst-case linear rates (dashed): (1 - mu/L)^k in each metric
+          const f0 = state.fGD[0];
+          const rateG = Math.max(0, 1 - state.muG / state.LG);
+          const rateM = Math.max(0, 1 - state.muR / state.LR);
+          dashedRate(ctx, (k) => f0 * Math.pow(rateG, k), xAt, yAt, "#B9C1CC");
+          dashedRate(ctx, (k) => f0 * Math.pow(rateM, k), xAt, yAt, "#E2B4CB");
+
+          convCurve(ctx, state.fGD, state.k, xAt, yAt, getCss("--gd"));
+          convCurve(ctx, state.fMD, state.k, xAt, yAt, getCss("--nes"));
+
+          const gx = xAt(state.k);
+          ctx.strokeStyle = "#C9CFD8";
+          ctx.setLineDash([3, 3]);
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(gx, padT);
+          ctx.lineTo(gx, padT + plotH);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+
+        function convCurve(ctx, arr, k, xAt, yAt, color) {
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 2;
+          ctx.lineJoin = "round";
+          ctx.beginPath();
+          for (let i = 0; i <= k; i++) {
+            const x = xAt(i),
+              y = yAt(arr[i]);
+            i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+          const hx = xAt(k),
+            hy = yAt(arr[k]);
+          ctx.fillStyle = color;
+          ctx.beginPath();
+          ctx.arc(hx, hy, 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        function dashedRate(ctx, fn, xAt, yAt, color) {
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 1.25;
+          ctx.setLineDash([4, 4]);
+          ctx.beginPath();
+          for (let k = 0; k <= MAXITER; k += 2) {
+            const x = xAt(k),
+              y = yAt(fn(k));
+            k === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+
+        // ---- readouts ---------------------------------------------------------
+        function updateReadout() {
+          const k = state.k;
+          document.getElementById("gd-val").textContent = fmt(state.fGD[k]);
+          document.getElementById("nes-val").textContent = fmt(state.fMD[k]);
+
+          const stepG = state.alphaGD,
+            stepM = state.alphaMD;
+          const gK = state.convK_GD,
+            mK = state.convK_MD;
+          document.getElementById("gd-meta").innerHTML =
+            gK >= 0 && k >= gK
+              ? `<span class="conv-flag">✓ reached 10⁻⁸ at k=${gK}</span>`
+              : `κ<sub>euclid</sub> ≈ ${fmtK(state.kappaG)} · α = ${stepG.toExponential(1)}`;
+          document.getElementById("nes-meta").innerHTML =
+            mK >= 0 && k >= mK
+              ? `<span class="conv-flag">✓ reached 10⁻⁸ at k=${mK}</span>`
+              : `κ<sub>mirror</sub> ≈ ${fmtK(state.kappaR)} · α = ${stepM.toFixed(3)}`;
+
+          document.getElementById("geom-note").innerHTML =
+            `Euclidean <span class="kg">κ ≈ ${fmtK(state.kappaG)}</span> vs. mirror <span class="kn">κ ≈ ${fmtK(
+              state.kappaR
+            )}</span> — the same Hessians, read in two metrics. The mirror geometry is what conditions the problem.`;
+
+          document.getElementById("iter").value = k;
+          document.getElementById("iter-num").textContent = k;
+        }
+
+        // ---- helpers ----------------------------------------------------------
+        const getCss = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+        const getSoft = (v) => (v === "--gd" ? getCss("--gd-soft") : getCss("--nes-soft"));
+        function fmt(v) {
+          if (v <= 0) return "0";
+          if (v >= 1e-3 && v < 1e4) return v.toPrecision(3);
+          const e = Math.floor(Math.log10(v));
+          return (v / Math.pow(10, e)).toFixed(1) + "×10" + supers(e);
+        }
+        const fmtK = (v) => (v >= 1000 ? Math.round(v / 10) * 10 : Math.round(v));
+        const SUP = { "-": "⁻", 0: "⁰", 1: "¹", 2: "²", 3: "³", 4: "⁴", 5: "⁵", 6: "⁶", 7: "⁷", 8: "⁸", 9: "⁹" };
+        const supers = (n) =>
+          String(n)
+            .split("")
+            .map((c) => SUP[c] || c)
+            .join("");
+
+        function redraw() {
+          drawPlot();
+          drawConv();
+          updateReadout();
+        }
+        // quartic-strength changes the objective, so it needs the full rescan;
+        // moving the start only needs the trajectories re-run.
+        function rebuild() {
+          configure();
+          compute();
+          state.k = 0;
+          redraw();
+        }
+        function rebuildStart() {
+          compute();
+          state.k = 0;
+          redraw();
+        }
+
+        // ---- animation --------------------------------------------------------
+        let last = 0;
+        function loop(t) {
+          if (state.playing) {
+            const dt = last ? (t - last) / 1000 : 0;
+            state.acc += dt * state.speed * 24;
+            while (state.acc >= 1 && state.k < MAXITER) {
+              state.k++;
+              state.acc -= 1;
+            }
+            if (state.k >= MAXITER) {
+              state.playing = false;
+              playBtn.textContent = "Replay";
+            }
+            redraw();
+          }
+          last = t;
+          requestAnimationFrame(loop);
+        }
+
+        // ---- controls ---------------------------------------------------------
+        const playBtn = document.getElementById("play");
+        function setPlaying(on) {
+          if (on && state.k >= MAXITER) state.k = 0;
+          state.playing = on;
+          state.acc = 0;
+          playBtn.textContent = on ? "Pause" : state.k >= MAXITER ? "Replay" : "Play";
+        }
+        playBtn.addEventListener("click", () => setPlaying(!state.playing));
+        document.getElementById("step").addEventListener("click", () => {
+          setPlaying(false);
+          state.k = Math.min(state.k + 1, MAXITER);
+          redraw();
+        });
+        document.getElementById("reset").addEventListener("click", () => {
+          setPlaying(false);
+          state.k = 0;
+          redraw();
+        });
+
+        const qEl = document.getElementById("q");
+        qEl.addEventListener("input", () => {
+          state.q = +qEl.value;
+          document.getElementById("q-num").textContent = state.q.toFixed(2).replace(/0$/, "").replace(/\.$/, ".0");
+          setPlaying(false);
+          rebuild();
+        });
+        const speedEl = document.getElementById("speed");
+        speedEl.addEventListener("input", () => {
+          state.speed = +speedEl.value;
+          document.getElementById("speed-num").textContent = state.speed.toFixed(2).replace(/0$/, "") + "×";
+        });
+        const iterEl = document.getElementById("iter");
+        iterEl.addEventListener("input", () => {
+          setPlaying(false);
+          state.k = +iterEl.value;
+          redraw();
+        });
+
+        // drag to orbit; a click without a drag moves the start
+        let drag = null;
+        plot.addEventListener("pointerdown", (e) => {
+          plot.setPointerCapture(e.pointerId);
+          plot.classList.add("dragging");
+          drag = { x: e.clientX, y: e.clientY, azim: state.azim, elev: state.elev, moved: 0 };
+        });
+        plot.addEventListener("pointermove", (e) => {
+          if (!drag) return;
+          const dx = e.clientX - drag.x,
+            dy = e.clientY - drag.y;
+          drag.moved = Math.max(drag.moved, Math.hypot(dx, dy));
+          state.azim = drag.azim + dx * 0.008;
+          state.elev = Math.max(0.3, Math.min(1.45, drag.elev + dy * 0.006));
+          drawPlot();
+        });
+        plot.addEventListener("pointerup", (e) => {
+          if (!drag) return;
+          const wasClick = drag.moved < 4;
+          drag = null;
+          plot.classList.remove("dragging");
+          if (!wasClick) return;
+          const r = plot.getBoundingClientRect();
+          state.start = pick(e.clientX - r.left, e.clientY - r.top);
+          setPlaying(false);
+          rebuildStart();
+        });
+        plot.addEventListener("pointercancel", () => {
+          drag = null;
+          plot.classList.remove("dragging");
+        });
+
+        // keyboard
+        window.addEventListener("keydown", (e) => {
+          if (e.target.tagName === "INPUT") return;
+          if (e.code === "Space") {
+            e.preventDefault();
+            setPlaying(!state.playing);
+          } else if (e.code === "ArrowRight") {
+            setPlaying(false);
+            state.k = Math.min(state.k + 1, MAXITER);
+            redraw();
+          } else if (e.code === "ArrowLeft") {
+            setPlaying(false);
+            state.k = Math.max(state.k - 1, 0);
+            redraw();
+          } else if (e.key.toLowerCase() === "r") {
+            setPlaying(false);
+            state.k = 0;
+            redraw();
+          }
+        });
+
+        let rt;
+        window.addEventListener("resize", () => {
+          clearTimeout(rt);
+          rt = setTimeout(redraw, 80);
+        });
+
+        // ---- dev assertions: catch a mistyped derivative or a bad inverse ----
+        (function selfCheck() {
+          const Aq = A0;
+          const p = { x: 1.1, y: -0.7 },
+            eps = 1e-6;
+          // finite-difference gradient
+          const gA = grad(p.x, p.y, Aq);
+          const gx = (F(p.x + eps, p.y, Aq) - F(p.x - eps, p.y, Aq)) / (2 * eps);
+          const gy = (F(p.x, p.y + eps, Aq) - F(p.x, p.y - eps, Aq)) / (2 * eps);
+          // finite-difference Hessian (00 and 11)
+          const HA = hess(p.x, p.y, Aq);
+          const h00 = (grad(p.x + eps, p.y, Aq).x - grad(p.x - eps, p.y, Aq).x) / (2 * eps);
+          const h11 = (grad(p.x, p.y + eps, Aq).y - grad(p.x, p.y - eps, Aq).y) / (2 * eps);
+          // inverse mirror map round-trip
+          const gh = gradh(0.7, -1.3);
+          const inv = invGradh(gh.x, gh.y);
+          const errs = [Math.abs(gA.x - gx), Math.abs(gA.y - gy), Math.abs(HA[0] - h00), Math.abs(HA[2] - h11), Math.hypot(inv.x - 0.7, inv.y + 1.3)];
+          const bad = Math.max(...errs);
+          if (bad > 1e-4) console.warn("[mirror-vs-gd] self-check exceeded tolerance:", errs);
+        })();
+
+        // ---- go ---------------------------------------------------------------
+        rebuild();
+        requestAnimationFrame(loop);
+        if (!state.prefersReduced) setTimeout(() => setPlaying(true), 400);
+      })();
+    </script>
+  </body>
+</html>
