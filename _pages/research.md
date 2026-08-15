@@ -6,7 +6,6 @@ nav: true
 nav_order: 1
 ---
 
-
 <p>My research focuses on large-scale optimization, with an emphasis on the design and convergence analysis of accelerated first-order methods.</p>
 
 <p>Gradient descent is a simple and widely used optimization method, but it can be slow to converge. We can accelerate the convergence of gradient descent using various techniques:</p>
