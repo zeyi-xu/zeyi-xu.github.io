@@ -1,0 +1,1111 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gradient Descent vs. Nesterov Acceleration</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #f5f6f8;
+        --panel: #ffffff;
+        --ink: #14181f;
+        --muted: #5b6472;
+        --faint: #8a93a2;
+        --grid: #e7eaef;
+        --rule: #dce0e7;
+        --gd: #0b6e99; /* cerulean */
+        --nes: #c81d6b; /* magenta  */
+        --gd-soft: rgba(11, 110, 153, 0.14);
+        --nes-soft: rgba(200, 29, 107, 0.14);
+        --display: "Space Grotesk", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        --body: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+        --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+      }
+      body {
+        background: var(--bg);
+        color: var(--ink);
+        font-family: var(--body);
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+        padding: clamp(16px, 4vw, 48px);
+      }
+      .wrap {
+        max-width: 1140px;
+        margin: 0 auto;
+      }
+
+      header {
+        margin-bottom: 22px;
+        max-width: 760px;
+      }
+      .eyebrow {
+        font-family: var(--mono);
+        font-size: 12px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--faint);
+        margin: 0 0 10px;
+      }
+      h1 {
+        font-family: var(--display);
+        font-weight: 600;
+        letter-spacing: -0.015em;
+        font-size: clamp(26px, 4.4vw, 42px);
+        line-height: 1.08;
+        margin: 0 0 12px;
+      }
+      h1 .n {
+        color: var(--nes);
+      }
+      h1 .g {
+        color: var(--gd);
+      }
+      .sub {
+        color: var(--muted);
+        font-size: clamp(14px, 1.6vw, 16px);
+        margin: 0;
+        max-width: 62ch;
+      }
+      .sub code {
+        font-family: var(--mono);
+        font-size: 0.9em;
+        color: var(--ink);
+        background: #eef0f4;
+        padding: 1px 5px;
+        border-radius: 4px;
+      }
+
+      .stage {
+        display: grid;
+        grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+        gap: 20px;
+        margin-top: 8px;
+      }
+      @media (max-width: 860px) {
+        .stage {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--rule);
+        border-radius: 14px;
+        padding: 16px;
+        position: relative;
+      }
+      .panel-label {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--faint);
+        margin: 0 0 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+      }
+      .panel-label .hint {
+        text-transform: none;
+        letter-spacing: 0;
+        color: var(--faint);
+        font-size: 11px;
+      }
+
+      canvas {
+        display: block;
+        width: 100%;
+        border-radius: 8px;
+        touch-action: none;
+      }
+      #plot {
+        aspect-ratio: 1/1;
+        cursor: grab;
+      }
+      #plot.dragging {
+        cursor: grabbing;
+      }
+      #conv {
+        aspect-ratio: 4/3;
+      }
+
+      .rightcol {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      /* readouts */
+      .readout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .stat {
+        border: 1px solid var(--rule);
+        border-radius: 10px;
+        padding: 11px 13px;
+      }
+      .stat.gd {
+        border-left: 3px solid var(--gd);
+      }
+      .stat.nes {
+        border-left: 3px solid var(--nes);
+      }
+      .stat h3 {
+        margin: 0 0 6px;
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        flex: 0 0 auto;
+      }
+      .dot.gd {
+        background: var(--gd);
+      }
+      .dot.nes {
+        background: var(--nes);
+      }
+      .stat .val {
+        font-family: var(--mono);
+        font-size: 20px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        line-height: 1.1;
+      }
+      .stat .meta {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--faint);
+        margin-top: 4px;
+      }
+      .stat .conv-flag {
+        color: var(--nes);
+        font-weight: 600;
+      }
+      .stat.gd .conv-flag {
+        color: var(--gd);
+      }
+
+      /* controls */
+      .controls {
+        grid-column: 1 / -1;
+        background: var(--panel);
+        border: 1px solid var(--rule);
+        border-radius: 14px;
+        padding: 16px 18px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 18px 22px;
+        margin-top: 20px;
+      }
+      .btns {
+        display: flex;
+        gap: 8px;
+      }
+      button {
+        font-family: var(--display);
+        font-weight: 500;
+        font-size: 14px;
+        color: var(--ink);
+        background: #fff;
+        border: 1px solid var(--rule);
+        border-radius: 9px;
+        padding: 9px 15px;
+        cursor: pointer;
+        transition:
+          background 0.12s,
+          border-color 0.12s,
+          transform 0.04s;
+      }
+      button:hover {
+        background: #f0f2f5;
+        border-color: #cbd1da;
+      }
+      button:active {
+        transform: translateY(1px);
+      }
+      button.primary {
+        background: var(--ink);
+        color: #fff;
+        border-color: var(--ink);
+        min-width: 104px;
+      }
+      button.primary:hover {
+        background: #232a34;
+      }
+      button:focus-visible,
+      input:focus-visible {
+        outline: 2px solid var(--gd);
+        outline-offset: 2px;
+      }
+
+      .slider {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        min-width: 190px;
+        flex: 1 1 190px;
+      }
+      .slider .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+      }
+      .slider label {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .slider .num {
+        font-family: var(--mono);
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--ink);
+      }
+      input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        height: 4px;
+        border-radius: 4px;
+        background: var(--grid);
+        cursor: pointer;
+      }
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--ink);
+        border: 2px solid #fff;
+        box-shadow: 0 0 0 1px var(--rule);
+      }
+      input[type="range"]::-moz-range-thumb {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--ink);
+        border: 2px solid #fff;
+        box-shadow: 0 0 0 1px var(--rule);
+      }
+
+      .caption {
+        grid-column: 1 / -1;
+        margin-top: 20px;
+        color: var(--muted);
+        font-size: 13.5px;
+        max-width: 88ch;
+        border-top: 1px solid var(--rule);
+        padding-top: 16px;
+      }
+      .caption b {
+        color: var(--ink);
+        font-weight: 600;
+      }
+      .caption code {
+        font-family: var(--mono);
+        font-size: 0.88em;
+        color: var(--ink);
+      }
+      .caption .eq {
+        font-family: var(--mono);
+        font-size: 12.5px;
+        color: var(--ink);
+        background: #eef0f4;
+        padding: 2px 6px;
+        border-radius: 5px;
+        white-space: nowrap;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          scroll-behavior: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <p class="eyebrow">First-order methods</p>
+        <h1><span class="g">Gradient descent</span> vs. <span class="n">Nesterov acceleration</span></h1>
+        <p class="sub">
+          Minimizing a strongly convex objective <code>f(x)=logΣexp(⟨aᵢ,x⟩+cᵢ) + ½(m₁x₁²+m₂x₂²)</code>. The log-sum-exp term bends the level sets away
+          from ellipses; the quadratic term sets the strong-convexity floor. Both methods share the same start and the same step size
+          <code>α=1/L</code>. The surface is the objective itself — height is function value — so you can watch both methods slide down the curved
+          valley.
+        </p>
+      </header>
+
+      <div class="stage">
+        <div class="panel">
+          <p class="panel-label">The surface f(x), height = value <span class="hint">drag to rotate · click to move the start</span></p>
+          <canvas id="plot"></canvas>
+        </div>
+
+        <div class="rightcol">
+          <div class="panel">
+            <p class="panel-label">Convergence · <span class="hint">f(x_k) − f★ on a log scale</span></p>
+            <canvas id="conv"></canvas>
+          </div>
+          <div class="readout">
+            <div class="stat gd">
+              <h3><span class="dot gd"></span>Gradient descent</h3>
+              <div class="val" id="gd-val">—</div>
+              <div class="meta" id="gd-meta">rate (1−1/κ)ᵏ</div>
+            </div>
+            <div class="stat nes">
+              <h3><span class="dot nes"></span>Nesterov</h3>
+              <div class="val" id="nes-val">—</div>
+              <div class="meta" id="nes-meta">rate (1−1/√κ)ᵏ</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="controls">
+          <div class="btns">
+            <button class="primary" id="play">Play</button>
+            <button id="step">Step</button>
+            <button id="reset">Reset</button>
+          </div>
+          <div class="slider">
+            <div class="row"><label for="kappa">Conditioning κ</label><span class="num" id="kappa-num">40</span></div>
+            <input type="range" id="kappa" min="10" max="120" value="40" step="1" />
+          </div>
+          <div class="slider">
+            <div class="row"><label for="speed">Speed</label><span class="num" id="speed-num">1.0×</span></div>
+            <input type="range" id="speed" min="0.25" max="6" value="1" step="0.25" />
+          </div>
+          <div class="slider" style="flex: 0 0 auto; min-width: 150px">
+            <div class="row"><label for="iter">Iteration k</label><span class="num" id="iter-num">0</span></div>
+            <input type="range" id="iter" min="0" max="160" value="0" step="1" />
+          </div>
+        </div>
+
+        <p class="caption">
+          The log-sum-exp behaves like a smooth max of the affine pieces <span class="eq">⟨aᵢ,x⟩+cᵢ</span>, so curvature varies from point to point:
+          the valley is a curved trough rather than a quadratic bowl, gradient directions rotate along the path, and the trajectories bend.
+          Conditioning lives in the anisotropic quadratic — the <b>κ</b> slider shrinks <span class="eq">m₁</span>, flattening the low-curvature
+          direction and stretching the trough. The <span class="eq">L</span>, <span class="eq">μ</span> and momentum
+          <span class="eq">β=(√κ−1)/(√κ+1)</span> used are measured from the Hessian's extreme eigenvalues over this window, not assumed, and
+          <span class="eq">x★</span> (the ✕) is located by Newton's method. Height on the surface is <span class="eq">√((f−f★)/span)</span> rather
+          than f itself: the raw surface is steep enough at the rim that its near wall would hide the valley floor at any usable camera angle, and the
+          square root is monotone so it moves no level set. Gradient descent uses <span class="eq">x₊ = x − α∇f(x)</span>; Nesterov adds
+          <span class="eq">y = x + β(x−x₋)</span>, <span class="eq">x₊ = y − α∇f(y)</span>. On the log-scale panel the two slopes are the story:
+          descent decays like <b>(1−1/κ)ᵏ</b>, Nesterov like <b>(1−1/√κ)ᵏ</b> — the √κ speedup. The faint dashed lines are those textbook worst-case
+          rates; the empirical curves can outrun their own bounds, so read the <i>gap between the two slopes</i> rather than the absolute offset. One
+          honest caveat: log-sum-exp has a bounded, non-vanishing gradient far from <span class="eq">x★</span>, which drives quick early progress, so
+          the acceleration gap here is real but modest — push κ up to make the √κ separation clearer. Drag the surface itself to orbit the camera.
+        </p>
+      </div>
+    </div>
+
+    <script>
+      (() => {
+        "use strict";
+
+        // ---- model -------------------------------------------------------------
+        // f(x) = W * logsumexp(Ax + c) + 0.5*(m1 x^2 + M2 y^2)
+        // The log-sum-exp is a smooth max of the affine pieces, so its curvature
+        // varies over the plane and the level sets are not ellipses; the quadratic
+        // term supplies the strong-convexity floor. The kappa slider sets m1, which
+        // is the low-curvature direction, so conditioning is what the slider buys.
+        const A = [
+          [0.9, 0.4],
+          [-0.8, 0.9],
+          [-0.3, -1.0],
+          [0.7, -0.6],
+        ];
+        const C = [0.2, 0.0, 0.3, -0.1];
+        const W = 1.0,
+          M2 = 1.4;
+        const L_REF = 2.33; // ~smoothness constant; maps slider kappa -> m1
+        const VIEW = { cx: -1.8, cy: 0.75, half: 3.7 }; // world window
+        // log-sum-exp has a bounded, non-vanishing gradient far from x*, so both
+        // methods make fast early progress and bottom out well before k=160 — no
+        // reason for the 300-step timeline the pure quadratic needed.
+        const MAXITER = 160;
+        const FLOOR = 1e-12; // log-scale floor for f-gap
+        const CONV = 1e-6; // "converged" threshold
+        // World height at the window rim. Under sqrt compression the walls have
+        // slope ~atan(HGT/half); keeping that below the camera elevation stops the
+        // near wall from hiding the valley floor.
+        const HGT = 3.2;
+        const NGRID = 30; // surface mesh resolution (cells per axis)
+        const LIFT = 0.05; // lift paths off the surface to avoid z-fighting
+
+        const state = {
+          kappa: 40, // slider value
+          m1: L_REF / 40,
+          L: 1,
+          mu: 1,
+          kEx: 40, // measured smoothness / strong convexity
+          alpha: 0.4,
+          beta: 0.7,
+          xstar: { x: 0, y: 0 },
+          fstar: 0,
+          fMin: 0,
+          fSpan: 1, // vertical normalization for the surface
+          start: { x: -4.5, y: 3.0 },
+          k: 0,
+          playing: false,
+          speed: 1,
+          acc: 0,
+          azim: -0.62, // rotation about the vertical axis (radians)
+          elev: 0.72, // camera elevation above the ground plane
+          trajGD: [],
+          trajNes: [],
+          fGD: [],
+          fNes: [],
+          convK_GD: null,
+          convK_Nes: null, // first k below CONV
+          prefersReduced: window.matchMedia("(prefers-reduced-motion:reduce)").matches,
+        };
+
+        const zc = (x, y) => A.map((a, i) => a[0] * x + a[1] * y + C[i]);
+        function softmax(z) {
+          const m = Math.max(...z),
+            e = z.map((v) => Math.exp(v - m));
+          const s = e.reduce((p, q) => p + q, 0);
+          return e.map((v) => v / s);
+        }
+        function F(x, y, m1) {
+          const z = zc(x, y),
+            m = Math.max(...z);
+          const lse = m + Math.log(z.reduce((s, v) => s + Math.exp(v - m), 0));
+          return W * lse + 0.5 * (m1 * x * x + M2 * y * y);
+        }
+        function grad(x, y, m1) {
+          const p = softmax(zc(x, y));
+          let gx = m1 * x,
+            gy = M2 * y;
+          for (let i = 0; i < A.length; i++) {
+            gx += W * p[i] * A[i][0];
+            gy += W * p[i] * A[i][1];
+          }
+          return { x: gx, y: gy };
+        }
+        function hess(x, y, m1) {
+          const p = softmax(zc(x, y));
+          let h00 = m1,
+            h01 = 0,
+            h11 = M2;
+          for (let i = 0; i < A.length; i++)
+            for (let j = 0; j < A.length; j++) {
+              const wt = W * ((i === j ? p[i] : 0) - p[i] * p[j]);
+              h00 += wt * A[i][0] * A[j][0];
+              h01 += wt * A[i][0] * A[j][1];
+              h11 += wt * A[i][1] * A[j][1];
+            }
+          return [h00, h01, h11];
+        }
+        function eigRange([a, b, c]) {
+          const t = a + c,
+            d = a * c - b * b,
+            s = Math.sqrt(Math.max(0, (t * t) / 4 - d));
+          return [t / 2 - s, t / 2 + s];
+        }
+        function newtonMin(m1) {
+          let x = 0,
+            y = 0;
+          for (let it = 0; it < 120; it++) {
+            const g = grad(x, y, m1),
+              [a, b, c] = hess(x, y, m1);
+            const det = a * c - b * b;
+            x -= (c * g.x - b * g.y) / det;
+            y -= (-b * g.x + a * g.y) / det;
+          }
+          return { x, y };
+        }
+
+        // sweep the window for the curvature extremes and the height normalization
+        function scanWindow(m1) {
+          let L = 0,
+            mu = Infinity,
+            fMax = -Infinity;
+          const N = 80,
+            step = (2 * VIEW.half) / N;
+          for (let i = 0; i <= N; i++)
+            for (let j = 0; j <= N; j++) {
+              const x = VIEW.cx - VIEW.half + i * step,
+                y = VIEW.cy - VIEW.half + j * step;
+              const e = eigRange(hess(x, y, m1));
+              if (e[1] > L) L = e[1];
+              if (e[0] < mu) mu = e[0];
+              const v = F(x, y, m1);
+              if (v > fMax) fMax = v;
+            }
+          return { L, mu, fMax };
+        }
+
+        function configure() {
+          state.m1 = L_REF / state.kappa;
+          const { L, mu, fMax } = scanWindow(state.m1);
+          state.L = L;
+          state.mu = mu;
+          state.kEx = L / mu;
+          state.alpha = 1 / L;
+          state.beta = (Math.sqrt(state.kEx) - 1) / (Math.sqrt(state.kEx) + 1);
+          state.xstar = newtonMin(state.m1);
+          state.fstar = F(state.xstar.x, state.xstar.y, state.m1);
+          state.fMin = state.fstar;
+          state.fSpan = Math.max(fMax - state.fstar, 1e-6);
+        }
+
+        function compute() {
+          const { alpha, beta, m1, fstar } = state;
+          const s = state.start;
+          const gap = (p) => Math.max(F(p.x, p.y, m1) - fstar, 0);
+
+          // gradient descent
+          const gx = [{ ...s }],
+            gf = [gap(s)];
+          let x = { ...s };
+          for (let i = 1; i <= MAXITER; i++) {
+            const g = grad(x.x, x.y, m1);
+            x = { x: x.x - alpha * g.x, y: x.y - alpha * g.y };
+            gx.push(x);
+            gf.push(gap(x));
+          }
+
+          // nesterov (strongly convex, constant momentum)
+          const nx = [{ ...s }],
+            nf = [gap(s)];
+          let xPrev = { ...s },
+            xCur = { ...s };
+          for (let i = 1; i <= MAXITER; i++) {
+            const y = { x: xCur.x + beta * (xCur.x - xPrev.x), y: xCur.y + beta * (xCur.y - xPrev.y) };
+            const g = grad(y.x, y.y, m1);
+            const xNext = { x: y.x - alpha * g.x, y: y.y - alpha * g.y };
+            nx.push(xNext);
+            nf.push(gap(xNext));
+            xPrev = xCur;
+            xCur = xNext;
+          }
+
+          state.trajGD = gx;
+          state.fGD = gf;
+          state.trajNes = nx;
+          state.fNes = nf;
+          state.convK_GD = gf.findIndex((v) => v <= CONV);
+          state.convK_Nes = nf.findIndex((v) => v <= CONV);
+        }
+
+        // ---- canvas plumbing --------------------------------------------------
+        function fitCanvas(cv) {
+          const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+          const r = cv.getBoundingClientRect();
+          cv.width = Math.round(r.width * dpr);
+          cv.height = Math.round(r.height * dpr);
+          const ctx = cv.getContext("2d");
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          return { ctx, w: r.width, h: r.height };
+        }
+
+        const plot = document.getElementById("plot");
+        const conv = document.getElementById("conv");
+
+        // ---- draw: 3-D surface + trajectories --------------------------------
+        // Height is the function value, compressed as sqrt((f-f*)/span): the raw
+        // surface is steep enough at the rim that its near wall would hide the
+        // valley floor at any usable camera angle. The square root is monotone, so
+        // it moves no level set — it only bends the vertical gauge.
+        const view = { ox: 0, oy: 0, scale: 1, ca: 1, sa: 0, se: 1, ce: 0 };
+
+        function setView(w, h) {
+          view.scale = Math.min(w, h) / (2 * VIEW.half * 1.3);
+          view.ox = w / 2;
+          view.oy = h * 0.63;
+          view.ca = Math.cos(state.azim);
+          view.sa = Math.sin(state.azim);
+          view.se = Math.sin(state.elev);
+          view.ce = Math.cos(state.elev);
+        }
+        // world (x,y,z) -> screen, plus a depth key (larger = farther from camera)
+        function proj(x, y, z) {
+          const px = x - VIEW.cx,
+            py = y - VIEW.cy;
+          const u = px * view.ca - py * view.sa;
+          const v = px * view.sa + py * view.ca;
+          return { x: view.ox + u * view.scale, y: view.oy - v * view.scale * view.se - z * view.scale * view.ce, d: v };
+        }
+        const hgt = (x, y) => {
+          const u = (F(x, y, state.m1) - state.fMin) / state.fSpan;
+          return HGT * Math.sqrt(Math.max(0, Math.min(1.2, u))); // cap paths that fly off-window
+        };
+        const onSurface = (p) => proj(p.x, p.y, hgt(p.x, p.y) + LIFT);
+        const surfFill = (t) => `hsl(212,${18 + 10 * t}%,${97 - 20 * t}%)`;
+
+        function drawPlot() {
+          const { ctx, w, h } = fitCanvas(plot);
+          setView(w, h);
+          ctx.clearRect(0, 0, w, h);
+
+          // mesh vertices
+          const step = (2 * VIEW.half) / NGRID;
+          const P = [];
+          for (let i = 0; i <= NGRID; i++) {
+            const row = [],
+              x = VIEW.cx - VIEW.half + i * step;
+            for (let j = 0; j <= NGRID; j++) {
+              const y = VIEW.cy - VIEW.half + j * step;
+              const z = hgt(x, y);
+              const p = proj(x, y, z);
+              p.t = z / HGT;
+              row.push(p);
+            }
+            P.push(row);
+          }
+
+          // quads, painter's algorithm (far -> near)
+          const quads = [];
+          for (let i = 0; i < NGRID; i++) {
+            for (let j = 0; j < NGRID; j++) {
+              const a = P[i][j],
+                b = P[i + 1][j],
+                c = P[i + 1][j + 1],
+                e = P[i][j + 1];
+              quads.push({ a, b, c, e, d: (a.d + b.d + c.d + e.d) / 4, t: (a.t + b.t + c.t + e.t) / 4 });
+            }
+          }
+          quads.sort((p, q) => q.d - p.d);
+
+          ctx.lineJoin = "round";
+          ctx.lineWidth = 0.6;
+          ctx.strokeStyle = "rgba(120,132,150,.20)";
+          for (const q of quads) {
+            ctx.beginPath();
+            ctx.moveTo(q.a.x, q.a.y);
+            ctx.lineTo(q.b.x, q.b.y);
+            ctx.lineTo(q.c.x, q.c.y);
+            ctx.lineTo(q.e.x, q.e.y);
+            ctx.closePath();
+            ctx.fillStyle = surfFill(q.t);
+            ctx.fill();
+            ctx.stroke();
+          }
+
+          // optimum marker, at the bottom of the bowl
+          const o = proj(state.xstar.x, state.xstar.y, hgt(state.xstar.x, state.xstar.y) + LIFT);
+          ctx.strokeStyle = "#8A93A2";
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(o.x - 5, o.y - 5);
+          ctx.lineTo(o.x + 5, o.y + 5);
+          ctx.moveTo(o.x + 5, o.y - 5);
+          ctx.lineTo(o.x - 5, o.y + 5);
+          ctx.stroke();
+
+          const k = state.k;
+          drawPath(ctx, state.trajGD, k, getCss("--gd"), "--gd");
+          drawPath(ctx, state.trajNes, k, getCss("--nes"), "--nes");
+
+          // start marker
+          const s = onSurface(state.start);
+          ctx.fillStyle = "#fff";
+          ctx.strokeStyle = "#5B6472";
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, 4.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        }
+
+        function drawPath(ctx, traj, k, color, cssVar) {
+          // trail, riding on the surface
+          ctx.strokeStyle = color;
+          ctx.globalAlpha = 0.6;
+          ctx.lineWidth = 1.8;
+          ctx.lineJoin = "round";
+          ctx.beginPath();
+          for (let i = 0; i <= k; i++) {
+            const p = onSurface(traj[i]);
+            i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y);
+          }
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+
+          // iterate dots (fade older ones)
+          for (let i = 0; i < k; i++) {
+            const p = onSurface(traj[i]);
+            ctx.globalAlpha = 0.18 + 0.82 * (i / Math.max(k, 1));
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 2.1, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.globalAlpha = 1;
+
+          // current head: a dashed stem to the floor reads as a height gauge
+          const cur = traj[k];
+          const head = onSurface(cur);
+          const foot = proj(cur.x, cur.y, 0);
+          ctx.strokeStyle = color;
+          ctx.globalAlpha = 0.35;
+          ctx.setLineDash([3, 3]);
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(head.x, head.y);
+          ctx.lineTo(foot.x, foot.y);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.globalAlpha = 1;
+
+          ctx.fillStyle = getSoft(cssVar);
+          ctx.beginPath();
+          ctx.arc(head.x, head.y, 9, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = color;
+          ctx.strokeStyle = "#fff";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(head.x, head.y, 5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        }
+
+        // screen point -> world (x,y): march the view ray down from above the
+        // surface and take the first (nearest-to-camera) intersection.
+        function pick(px, py) {
+          const toWorld = (z) => {
+            const u = (px - view.ox) / view.scale;
+            const v = (view.oy - py - z * view.scale * view.ce) / (view.scale * view.se);
+            return { x: u * view.ca + v * view.sa + VIEW.cx, y: -u * view.sa + v * view.ca + VIEW.cy };
+          };
+          const cl = (t, c) => Math.max(c - VIEW.half, Math.min(c + VIEW.half, t));
+          const inside = (p) => Math.abs(p.x - VIEW.cx) <= VIEW.half && Math.abs(p.y - VIEW.cy) <= VIEW.half;
+          // march z downward: that walks the ray from near the camera outward, so
+          // the first in-domain crossing is the visible one. Samples outside the
+          // plotted square are skipped — the surface continues to climb there and
+          // would otherwise hijack the hit.
+          let hit = null;
+          for (let n = 900; n >= 0; n--) {
+            const z = HGT * 1.3 * (n / 900);
+            const p = toWorld(z);
+            if (inside(p) && hgt(p.x, p.y) >= z) {
+              hit = p;
+              break;
+            }
+          }
+          if (!hit) hit = toWorld(0); // ray misses the bowl: use the floor
+          return { x: cl(hit.x, VIEW.cx), y: cl(hit.y, VIEW.cy) };
+        }
+
+        // ---- draw: convergence (log scale) -----------------------------------
+        function drawConv() {
+          const { ctx, w, h } = fitCanvas(conv);
+          const padL = 52,
+            padR = 14,
+            padT = 12,
+            padB = 30;
+          const plotW = w - padL - padR,
+            plotH = h - padT - padB;
+
+          ctx.clearRect(0, 0, w, h);
+
+          const top = Math.log10(Math.max(state.fGD[0], state.fNes[0], 1e-9));
+          const bot = Math.log10(FLOOR);
+          const xAt = (k) => padL + (k / MAXITER) * plotW;
+          const yAt = (fv) => {
+            const lv = Math.log10(Math.max(fv, FLOOR));
+            return padT + (1 - (lv - bot) / (top - bot)) * plotH;
+          };
+
+          // decade gridlines + y labels
+          ctx.font = "500 10px " + getCss("--mono");
+          ctx.textAlign = "right";
+          ctx.textBaseline = "middle";
+          for (let e = Math.ceil(bot); e <= Math.floor(top); e++) {
+            const y = yAt(Math.pow(10, e));
+            ctx.strokeStyle = "#EEF0F4";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(padL, y);
+            ctx.lineTo(w - padR, y);
+            ctx.stroke();
+            ctx.fillStyle = "#8A93A2";
+            ctx.fillText("10" + supers(e), padL - 8, y);
+          }
+
+          // x axis ticks
+          ctx.textAlign = "center";
+          ctx.textBaseline = "top";
+          ctx.fillStyle = "#8A93A2";
+          for (let k = 0; k <= MAXITER; k += 40) {
+            const x = xAt(k);
+            ctx.strokeStyle = "#EEF0F4";
+            ctx.beginPath();
+            ctx.moveTo(x, padT);
+            ctx.lineTo(x, padT + plotH);
+            ctx.stroke();
+            ctx.fillText(k, x, padT + plotH + 7);
+          }
+
+          // theoretical worst-case rate references (dashed)
+          const f0 = state.fGD[0],
+            kx = state.kEx;
+          dashedRate(ctx, (k) => f0 * Math.pow(1 - 1 / kx, k), xAt, yAt, "#B9C1CC");
+          dashedRate(ctx, (k) => f0 * Math.pow(1 - 1 / Math.sqrt(kx), k), xAt, yAt, "#E2B4CB");
+
+          // empirical curves up to current k
+          convCurve(ctx, state.fGD, state.k, xAt, yAt, getCss("--gd"));
+          convCurve(ctx, state.fNes, state.k, xAt, yAt, getCss("--nes"));
+
+          // current-k guide
+          const gx = xAt(state.k);
+          ctx.strokeStyle = "#C9CFD8";
+          ctx.setLineDash([3, 3]);
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(gx, padT);
+          ctx.lineTo(gx, padT + plotH);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+
+        function convCurve(ctx, arr, k, xAt, yAt, color) {
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 2;
+          ctx.lineJoin = "round";
+          ctx.beginPath();
+          for (let i = 0; i <= k; i++) {
+            const x = xAt(i),
+              y = yAt(arr[i]);
+            i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+          const hx = xAt(k),
+            hy = yAt(arr[k]);
+          ctx.fillStyle = color;
+          ctx.beginPath();
+          ctx.arc(hx, hy, 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        function dashedRate(ctx, fn, xAt, yAt, color) {
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 1.25;
+          ctx.setLineDash([4, 4]);
+          ctx.beginPath();
+          for (let k = 0; k <= MAXITER; k += 2) {
+            const x = xAt(k),
+              y = yAt(fn(k));
+            k === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+
+        // ---- readouts ---------------------------------------------------------
+        function updateReadout() {
+          const k = state.k;
+          const gGap = state.fGD[k],
+            nGap = state.fNes[k];
+          document.getElementById("gd-val").textContent = fmt(gGap);
+          document.getElementById("nes-val").textContent = fmt(nGap);
+
+          const gK = state.convK_GD,
+            nK = state.convK_Nes;
+          document.getElementById("gd-meta").innerHTML =
+            gK >= 0 && k >= gK ? `<span class="conv-flag">✓ reached 10⁻⁶ at k=${gK}</span>` : `rate (1−1/κ)ᵏ · κ=${Math.round(state.kEx)}`;
+          document.getElementById("nes-meta").innerHTML =
+            nK >= 0 && k >= nK
+              ? `<span class="conv-flag">✓ reached 10⁻⁶ at k=${nK}</span>`
+              : `rate (1−1/√κ)ᵏ · √κ≈${Math.sqrt(state.kEx).toFixed(1)}`;
+
+          const iter = document.getElementById("iter");
+          iter.value = k;
+          document.getElementById("iter-num").textContent = k;
+        }
+
+        // ---- helpers ----------------------------------------------------------
+        const getCss = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+        const getSoft = (v) => (v === "--gd" ? getCss("--gd-soft") : getCss("--nes-soft"));
+        function fmt(v) {
+          if (v <= 0) return "0";
+          if (v >= 1e-3 && v < 1e4) return v.toPrecision(3);
+          const e = Math.floor(Math.log10(v));
+          return (v / Math.pow(10, e)).toFixed(1) + "×10" + supers(e);
+        }
+        const SUP = { "-": "⁻", 0: "⁰", 1: "¹", 2: "²", 3: "³", 4: "⁴", 5: "⁵", 6: "⁶", 7: "⁷", 8: "⁸", 9: "⁹" };
+        const supers = (n) =>
+          String(n)
+            .split("")
+            .map((c) => SUP[c] || c)
+            .join("");
+
+        function redraw() {
+          drawPlot();
+          drawConv();
+          updateReadout();
+        }
+        // kappa changes the objective itself, so it needs the curvature rescan;
+        // moving the start point only needs the trajectories re-run.
+        function rebuild() {
+          configure();
+          compute();
+          state.k = 0;
+          redraw();
+        }
+        function rebuildStart() {
+          compute();
+          state.k = 0;
+          redraw();
+        }
+
+        // ---- animation --------------------------------------------------------
+        let last = 0;
+        function loop(t) {
+          if (state.playing) {
+            const dt = last ? (t - last) / 1000 : 0;
+            state.acc += dt * state.speed * 24; // ~24 iters/sec at 1x
+            while (state.acc >= 1 && state.k < MAXITER) {
+              state.k++;
+              state.acc -= 1;
+            }
+            if (state.k >= MAXITER) {
+              state.playing = false;
+              playBtn.textContent = "Replay";
+            }
+            redraw();
+          }
+          last = t;
+          requestAnimationFrame(loop);
+        }
+
+        // ---- controls ---------------------------------------------------------
+        const playBtn = document.getElementById("play");
+        function setPlaying(on) {
+          if (on && state.k >= MAXITER) {
+            state.k = 0;
+          }
+          state.playing = on;
+          state.acc = 0;
+          playBtn.textContent = on ? "Pause" : state.k >= MAXITER ? "Replay" : "Play";
+        }
+        playBtn.addEventListener("click", () => setPlaying(!state.playing));
+        document.getElementById("step").addEventListener("click", () => {
+          setPlaying(false);
+          state.k = Math.min(state.k + 1, MAXITER);
+          redraw();
+        });
+        document.getElementById("reset").addEventListener("click", () => {
+          setPlaying(false);
+          state.k = 0;
+          redraw();
+        });
+
+        const kappaEl = document.getElementById("kappa");
+        kappaEl.addEventListener("input", () => {
+          state.kappa = +kappaEl.value;
+          document.getElementById("kappa-num").textContent = state.kappa;
+          rebuild();
+        });
+        const speedEl = document.getElementById("speed");
+        speedEl.addEventListener("input", () => {
+          state.speed = +speedEl.value;
+          document.getElementById("speed-num").textContent = state.speed.toFixed(2).replace(/0$/, "") + "×";
+        });
+        const iterEl = document.getElementById("iter");
+        iterEl.addEventListener("input", () => {
+          setPlaying(false);
+          state.k = +iterEl.value;
+          redraw();
+        });
+
+        // drag the plot to orbit the camera; a click without a drag moves the start
+        let drag = null;
+        plot.addEventListener("pointerdown", (e) => {
+          plot.setPointerCapture(e.pointerId);
+          plot.classList.add("dragging");
+          drag = { x: e.clientX, y: e.clientY, azim: state.azim, elev: state.elev, moved: 0 };
+        });
+        plot.addEventListener("pointermove", (e) => {
+          if (!drag) return;
+          const dx = e.clientX - drag.x,
+            dy = e.clientY - drag.y;
+          drag.moved = Math.max(drag.moved, Math.hypot(dx, dy));
+          state.azim = drag.azim + dx * 0.008;
+          state.elev = Math.max(0.3, Math.min(1.45, drag.elev + dy * 0.006));
+          drawPlot();
+        });
+        plot.addEventListener("pointerup", (e) => {
+          if (!drag) return;
+          const wasClick = drag.moved < 4;
+          drag = null;
+          plot.classList.remove("dragging");
+          if (!wasClick) return;
+          const r = plot.getBoundingClientRect();
+          state.start = pick(e.clientX - r.left, e.clientY - r.top);
+          setPlaying(false);
+          rebuildStart();
+        });
+        plot.addEventListener("pointercancel", () => {
+          drag = null;
+          plot.classList.remove("dragging");
+        });
+
+        // keyboard
+        window.addEventListener("keydown", (e) => {
+          if (e.target.tagName === "INPUT") return;
+          if (e.code === "Space") {
+            e.preventDefault();
+            setPlaying(!state.playing);
+          } else if (e.code === "ArrowRight") {
+            setPlaying(false);
+            state.k = Math.min(state.k + 1, MAXITER);
+            redraw();
+          } else if (e.code === "ArrowLeft") {
+            setPlaying(false);
+            state.k = Math.max(state.k - 1, 0);
+            redraw();
+          } else if (e.key.toLowerCase() === "r") {
+            setPlaying(false);
+            state.k = 0;
+            redraw();
+          }
+        });
+
+        // resize
+        let rt;
+        window.addEventListener("resize", () => {
+          clearTimeout(rt);
+          rt = setTimeout(redraw, 80);
+        });
+
+        // ---- go ---------------------------------------------------------------
+        rebuild();
+        requestAnimationFrame(loop);
+        if (!state.prefersReduced) setTimeout(() => setPlaying(true), 400);
+      })();
+    </script>
+  </body>
+</html>
