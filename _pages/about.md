@@ -12,6 +12,7 @@ profile:
     <p>Department of Mathematics</p>
     <p>University of California, Irvine</p>
     <p>Irvine, CA 92697</p>
+    <p><a href="mailto:zeyix1@uci.edu">zeyix1@uci.edu</a></p>
 
 selected_papers: false # rendered manually below so that conference talks can follow it
 social: true # includes social icons at the bottom of the page

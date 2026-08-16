@@ -105,6 +105,13 @@ h6 {
   font-size: 0.9375rem; // 15px
 }
 
+// The theme sets these to inline-block, so two short lines can end up sharing
+// a row once the profile column is wide. Contact details read as a list, so
+// give each its own line.
+.profile .more-info p {
+  display: block;
+}
+
 // Hide the site footer (theme credits and copyright line). The footer markup
 // comes from the gem's _includes/footer.liquid and the layout includes it
 // unconditionally, with no config flag to turn it off. Shadowing _includes/ is
