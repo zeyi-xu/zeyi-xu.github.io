@@ -105,12 +105,21 @@ h6 {
   font-size: 0.9375rem; // 15px
 }
 
-footer.fixed-bottom {
-  font-size: 0.875rem; // 14px
+// Hide the site footer (theme credits and copyright line). The footer markup
+// comes from the gem's _includes/footer.liquid and the layout includes it
+// unconditionally, with no config flag to turn it off. Shadowing _includes/ is
+// not an option here: it is a forbidden path under the starter style contract
+// (see AGENTS.md), so CSS is the supported lever. Both variants are covered so
+// this keeps working if site.footer_fixed is ever flipped.
+footer.fixed-bottom,
+footer.sticky-bottom {
+  display: none;
 }
 
-footer.sticky-bottom {
-  font-size: 1rem; // 16px
+// The theme reserves 70px at the bottom of every page to clear the fixed
+// footer. With the footer hidden that is just dead space.
+body {
+  padding-bottom: 0;
 }
 
 // The theme ships no responsive type at all, so a 44px h1 would hit a 390px

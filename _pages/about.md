@@ -33,9 +33,7 @@ Put your address / P.O. box / other info right below your picture. You can also 
 
 Link to your social media connections, too. This theme is set up to use [Font Awesome icons](https://fontawesome.com/) and [Academicons](https://jpswalsh.github.io/academicons/), like the ones below. Add your Facebook, Twitter, LinkedIn, Google Scholar, or just disable all of them. -->
 
-I am a PhD student in the [Department of Mathematics](https://www.math.uci.edu/) at the [University of California, Irvine](https://uci.edu/), advised by [Professor Long Chen](https://www.math.uci.edu/~chenlong/).
-
-My research focuses on large-scale optimization and its applications, with an emphasis on the design and convergence analysis of accelerated first-order methods. Feel free to reach out via email — I'm always happy to discuss.
+I am a PhD student in the [Department of Mathematics](https://www.math.uci.edu/) at the [University of California, Irvine](https://uci.edu/), advised by [Professor Long Chen](https://www.math.uci.edu/~chenlong/). My research focuses on large-scale optimization and its applications, with an emphasis on the design and convergence analysis of accelerated first-order methods. I am also interested in applications of optimization to areas such as optimal transport and sampling. Feel free to reach out via email—I am always happy to discuss research and potential collaborations.
 
 <h2 style="clear: both"><a href="{{ '/publications/' | relative_url }}" style="color: inherit">selected publications</a></h2>
 
@@ -45,4 +43,4 @@ My research focuses on large-scale optimization and its applications, with an em
 
 - **[SOCAMS 2026](https://www.socams.org/)** — Southern California Applied Mathematics Symposium, Loyola Marymount University, Los Angeles, CA, April 25, 2026. Contributed talk: _Accelerating Sinkhorn for Entropy-Regularized Optimal Transport_.
 - **[SOCAMS 2025](https://www.socams.org/)** — Southern California Applied Mathematics Symposium, University of California, Riverside, April 26, 2025. Contributed talk: _Adaptive Accelerated Gradient Descent Methods for Convex Optimization_.
-- **[NSF–CBMS Regional Research Conference](https://cbmsweb.org/regional-conferences/conference-series-events-2023/)** — _Deep Learning and Numerical PDEs_, principal lecturer Jinchao Xu, Morgan State University, Baltimore, MD, June 19–23, 2023.
+- **[NSF–CBMS Regional Research Conference](https://cbmsweb.org/regional-conferences/conference-series-events-2023/)** — _Deep Learning and Numerical PDEs_, Morgan State University, Baltimore, MD, June 19–23, 2023.
