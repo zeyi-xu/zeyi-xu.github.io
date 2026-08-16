@@ -37,7 +37,7 @@ I am a PhD student in the [Department of Mathematics](https://www.math.uci.edu/)
 
 My research focuses on large-scale optimization and its applications, with an emphasis on the design and convergence analysis of accelerated first-order methods. Feel free to reach out via email — I'm always happy to discuss.
 
-<h2><a href="{{ '/publications/' | relative_url }}" style="color: inherit">selected publications</a></h2>
+<h2 style="clear: both"><a href="{{ '/publications/' | relative_url }}" style="color: inherit">selected publications</a></h2>
 
 {% include selected_papers.liquid %}
 
