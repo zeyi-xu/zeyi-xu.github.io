@@ -41,10 +41,17 @@
  * body to a reading weight and headings to a heading weight so there is an
  * actual typographic hierarchy. This file is loaded after tailwind.css, so
  * these win on source order at equal specificity.
+ *
+ * Sizes follow one modular scale with a ratio of roughly 1.2, anchored on an
+ * 18px body. Every size below is a step on that scale, so raising the body
+ * size does not flatten the gaps between heading levels. Secondary text keeps
+ * its proportion to body copy rather than staying at its old absolute size.
  ******************************************************************************/
 
 body {
   font-weight: 400;
+  font-size: 1.125rem; // 18px
+  line-height: 1.6; // more leading, since the lines are longer and larger
 }
 
 h1,
@@ -54,4 +61,67 @@ h4,
 h5,
 h6 {
   font-weight: 600;
+}
+
+h1 {
+  font-size: 2.75rem; // 44px
+}
+
+h2 {
+  font-size: 2.25rem; // 36px
+}
+
+h3 {
+  font-size: 1.875rem; // 30px
+}
+
+h4 {
+  font-size: 1.625rem; // 26px
+}
+
+h5 {
+  font-size: 1.375rem; // 22px
+}
+
+h6 {
+  font-size: 1.125rem; // 18px, separated from body by weight alone
+}
+
+// Secondary text. The theme pins these at 0.875rem, which would read as a
+// bigger drop from body copy now that body is 18px. Selectors mirror the
+// theme's own specificity so these win on source order.
+.post-meta,
+.post-tags,
+.post-description,
+.post-list li .post-meta,
+.post-list li .post-tags,
+.post .post-meta,
+.post .post-tags,
+.bibliography li .hidden {
+  font-size: 1rem; // 16px
+}
+
+.social .contact-note {
+  font-size: 0.9375rem; // 15px
+}
+
+footer.fixed-bottom {
+  font-size: 0.875rem; // 14px
+}
+
+footer.sticky-bottom {
+  font-size: 1rem; // 16px
+}
+
+// The theme ships no responsive type at all, so a 44px h1 would hit a 390px
+// phone at full size. Step the two largest levels down on small screens; the
+// rest of the scale is already comfortable there.
+@media (max-width: 575.98px) {
+  h1 {
+    font-size: 2.25rem; // 36px
+  }
+
+  h2 {
+    font-size: 1.875rem; // 30px
+  }
 }
