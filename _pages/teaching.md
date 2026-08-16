@@ -9,8 +9,6 @@ nav_order: 2
 
 ## Teaching assistantships
 
-Teaching assistant for the following courses in the Department of Mathematics, University of California, Irvine, listed most recent first.
-
 | Term        | Course    | Title                             |
 | ----------- | --------- | --------------------------------- |
 | 2026 Winter | MATH 290C | Methods in Applied Mathematics    |
