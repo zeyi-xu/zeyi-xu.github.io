@@ -48,6 +48,25 @@
  * its proportion to body copy rather than staying at its old absolute size.
  ******************************************************************************/
 
+// Replace the theme's magenta accent (#b509ac) with a navy blue. Links,
+// active nav items and publication badges all read --global-theme-color.
+// Dark mode gets a lighter blue so links keep their contrast on the dark
+// background. The code background tint is derived from the accent too, so
+// retint it to match. Light mode also swaps pure white for a soft off-white;
+// cards follow so they don't show as white boxes on the page.
+:root {
+  --global-bg-color: #fafaf7;
+  --global-card-bg-color: #fafaf7;
+  --global-theme-color: #1f5b99;
+  --global-hover-color: #1f5b99;
+  --global-code-bg-color: rgba(31, 91, 153, 0.05);
+}
+
+html[data-theme="dark"] {
+  --global-theme-color: #7ab0e8;
+  --global-hover-color: #7ab0e8;
+}
+
 body {
   font-weight: 400;
   font-size: 1.125rem; // 18px
