@@ -110,8 +110,6 @@
       .panel-label {
         font-family: var(--mono);
         font-size: 11px;
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
         color: var(--faint);
         margin: 0 0 10px;
         display: flex;
@@ -280,7 +278,6 @@
         font-family: var(--mono);
         font-size: 11px;
         letter-spacing: 0.06em;
-        text-transform: uppercase;
         color: var(--muted);
       }
       .slider .num {
@@ -354,26 +351,15 @@
   </head>
   <body>
     <div class="wrap">
-      <header>
-        <p class="eyebrow">First-order methods</p>
-        <h1><span class="g">Gradient descent</span> vs. <span class="n">Nesterov acceleration</span></h1>
-        <p class="sub">
-          Minimizing a strongly convex objective <code>f(x)=logΣexp(⟨aᵢ,x⟩+cᵢ) + ½(m₁x₁²+m₂x₂²)</code>. The log-sum-exp term bends the level sets away
-          from ellipses; the quadratic term sets the strong-convexity floor. Both methods share the same start and the same step size
-          <code>α=1/L</code>. The surface is the objective itself — height is function value — so you can watch both methods slide down the curved
-          valley.
-        </p>
-      </header>
-
       <div class="stage">
         <div class="panel">
-          <p class="panel-label">The surface f(x), height = value <span class="hint">drag to rotate · click to move the start</span></p>
+          <p class="panel-label"><span>f(x)</span></p>
           <canvas id="plot"></canvas>
         </div>
 
         <div class="rightcol">
           <div class="panel">
-            <p class="panel-label">Convergence · <span class="hint">f(x_k) − f★ on a log scale</span></p>
+            <p class="panel-label"><span>f(xₖ) − f★</span></p>
             <canvas id="conv"></canvas>
           </div>
           <div class="readout">
@@ -409,22 +395,6 @@
             <input type="range" id="iter" min="0" max="160" value="0" step="1" />
           </div>
         </div>
-
-        <p class="caption">
-          The log-sum-exp behaves like a smooth max of the affine pieces <span class="eq">⟨aᵢ,x⟩+cᵢ</span>, so curvature varies from point to point:
-          the valley is a curved trough rather than a quadratic bowl, gradient directions rotate along the path, and the trajectories bend.
-          Conditioning lives in the anisotropic quadratic — the <b>κ</b> slider shrinks <span class="eq">m₁</span>, flattening the low-curvature
-          direction and stretching the trough. The <span class="eq">L</span>, <span class="eq">μ</span> and momentum
-          <span class="eq">β=(√κ−1)/(√κ+1)</span> used are measured from the Hessian's extreme eigenvalues over this window, not assumed, and
-          <span class="eq">x★</span> (the ✕) is located by Newton's method. Height on the surface is <span class="eq">√((f−f★)/span)</span> rather
-          than f itself: the raw surface is steep enough at the rim that its near wall would hide the valley floor at any usable camera angle, and the
-          square root is monotone so it moves no level set. Gradient descent uses <span class="eq">x₊ = x − α∇f(x)</span>; Nesterov adds
-          <span class="eq">y = x + β(x−x₋)</span>, <span class="eq">x₊ = y − α∇f(y)</span>. On the log-scale panel the two slopes are the story:
-          descent decays like <b>(1−1/κ)ᵏ</b>, Nesterov like <b>(1−1/√κ)ᵏ</b> — the √κ speedup. The faint dashed lines are those textbook worst-case
-          rates; the empirical curves can outrun their own bounds, so read the <i>gap between the two slopes</i> rather than the absolute offset. One
-          honest caveat: log-sum-exp has a bounded, non-vanishing gradient far from <span class="eq">x★</span>, which drives quick early progress, so
-          the acceleration gap here is real but modest — push κ up to make the √κ separation clearer. Drag the surface itself to orbit the camera.
-        </p>
       </div>
     </div>
 
