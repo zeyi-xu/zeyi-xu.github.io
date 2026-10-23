@@ -4,7 +4,37 @@
   }
 </style> <link rel="stylesheet" href="/assets/css/tailwind.css?v=50c64c15cbb9fd1ce6056fdb8bcb4b62"> <link defer rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.2.0/css/all.min.css" integrity="sha256-MVopmdyC2tYTiJ8wlktf0uh0v4NgT+vNdyVFepi7Q0c=" crossorigin="anonymous"> <link defer rel="stylesheet" href="https://cdn.jsdelivr.net/npm/academicons@1.9.5/css/academicons.min.css" integrity="sha256-SzrCOBJbGVFMahewkgjwnApaV2+av1DwMAA+/QGLyZw=" crossorigin="anonymous"> <link defer rel="stylesheet" href="https://cdn.jsdelivr.net/npm/scholar-icons@1.0.3/css/scholar-icons.css" integrity="sha256-VY3hHVj/hNX3fYG6wtbA6TcKJQl7+FthzGSyIB64klY=" crossorigin="anonymous"> <link defer rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:100,300,400,500,700|Material+Icons&amp;display=swap"> <link defer rel="stylesheet" href="/assets/css/jekyll-pygments-themes-github.css?v=591dab5a4e56573bf4ef7fd332894c99" media="" id="highlight_theme_light"> <link rel="stylesheet" href="/assets/css/main.css?v=3116ba77db9ee1581d05bb3e86fbf7f1"> <link rel="canonical" href="https://zeyi-xu.github.io/research/"> <script src="/assets/js/theme.js?v=5286c3e4c334d0ecb8fc0c40ff4fa7ec"></script> <link defer rel="stylesheet" href="/assets/css/jekyll-pygments-themes-native.css?v=5847e5ed4a4568527aa6cfab446049ca" media="none" id="highlight_theme_dark"> <script>
     initTheme();
-  </script> </head> <body class="fixed-top-nav "> <header> <nav id="navbar" class="navbar navbar-light navbar-expand-sm fixed-top" role="navigation"> <div class="container"> <a class="navbar-brand title font-weight-lighter" href="/"> <span class="font-weight-bold">Zeyi</span> Xu </a> <button class="navbar-toggler collapsed navbar-toggler-main" type="button" data-nav-toggle="navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"> <span class="sr-only">Toggle navigation</span> <span class="icon-bar top-bar"></span> <span class="icon-bar middle-bar"></span> <span class="icon-bar bottom-bar"></span> </button> <div class="collapse navbar-collapse navbar-collapse-main" id="navbarNav"> <ul class="navbar-nav navbar-menu-list flex-nowrap"> <li class="nav-item "> <a class="nav-link" href="/">about </a> </li> <li class="nav-item active"> <a class="nav-link" href="/research/">research <span class="sr-only">(current)</span> </a> </li> <li class="nav-item "> <a class="nav-link" href="/teaching/">teaching </a> </li> <li class="nav-item "> <a class="nav-link" href="/publications/">publications and preprints </a> </li> <li class="toggle-container"> <button id="light-toggle" type="button" title="Change theme" aria-label="Change color theme"> <i class="fa-half-sun-moon" id="light-toggle-system"></i> <i class="fa-solid fa-moon" id="light-toggle-dark"></i> <i class="fa-solid fa-sun" id="light-toggle-light"></i> </button> </li> </ul> </div> </div> </nav> <progress id="progress" value="0"> <div class="progress-container"> <span class="progress-bar"></span> </div> </progress> </header> <div class="container mt-5" role="main"> <div class="post"> <header class="post-header"> <h1 class="post-title">research</h1> <p class="post-description"></p> </header> <article> <p>My research focuses on large-scale optimization, with an emphasis on the design and convergence analysis of accelerated first-order methods.</p> <p>Gradient descent is a simple and widely used optimization method, but it can be slow to converge. We can accelerate the convergence of gradient descent using various techniques:</p> <ul>Momentum methods, such as Nesterov's accelerated gradient method, which uses a combination of the current and previous gradients to update the parameters.</ul> <ul>Mirror descent, which uses a different geometry to update the parameters, allowing for faster convergence in certain cases.</ul> <ul>Adaptive methods, such as AdaGrad and Adam, which adjust the learning rate based on the history of gradients.</ul> <p>My research aims to combine these techniques in a principled way to design new optimization algorithms that are both fast and robust.</p> <p> Below are some visualizations of the different optimization techniques. Have fun exploring!</p> <h2 id="acceleration">Acceleration</h2> <div class="embed-frame"> <iframe id="nesterov-vs-gd" src="/assets/html/nesterov-vs-gd.html" title="Gradient descent vs. Nesterov acceleration" loading="lazy"></iframe> </div> <h2 id="mirror">Mirror</h2> <div class="embed-frame"> <iframe id="mirror" src="/assets/html/mirror-vs-gd.html" title="Gradient descent vs. mirror descent" loading="lazy"></iframe> </div> <h2 id="adaptivity">Adaptivity</h2> <div class="embed-frame"> <iframe id="adaptive" src="/assets/html/adaptive-rule.html" title="Fixed step gradient descent vs. adaptive gradient descent" loading="lazy"></iframe> </div> <style>
+  </script> </head> <body class="fixed-top-nav "> <header> <nav id="navbar" class="navbar navbar-light navbar-expand-sm fixed-top" role="navigation"> <div class="container"> <a class="navbar-brand title font-weight-lighter" href="/"> <span class="font-weight-bold">Zeyi</span> Xu </a> <button class="navbar-toggler collapsed navbar-toggler-main" type="button" data-nav-toggle="navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"> <span class="sr-only">Toggle navigation</span> <span class="icon-bar top-bar"></span> <span class="icon-bar middle-bar"></span> <span class="icon-bar bottom-bar"></span> </button> <div class="collapse navbar-collapse navbar-collapse-main" id="navbarNav"> <ul class="navbar-nav navbar-menu-list flex-nowrap"> <li class="nav-item "> <a class="nav-link" href="/">about </a> </li> <li class="nav-item active"> <a class="nav-link" href="/research/">research <span class="sr-only">(current)</span> </a> </li> <li class="nav-item "> <a class="nav-link" href="/teaching/">teaching </a> </li> <li class="nav-item "> <a class="nav-link" href="/publications/">publications and preprints </a> </li> <li class="toggle-container"> <button id="light-toggle" type="button" title="Change theme" aria-label="Change color theme"> <i class="fa-half-sun-moon" id="light-toggle-system"></i> <i class="fa-solid fa-moon" id="light-toggle-dark"></i> <i class="fa-solid fa-sun" id="light-toggle-light"></i> </button> </li> </ul> </div> </div> </nav> <progress id="progress" value="0"> <div class="progress-container"> <span class="progress-bar"></span> </div> </progress> </header> <div class="container mt-5" role="main"> <div class="post"> <header class="post-header"> <h1 class="post-title">research</h1> <p class="post-description"></p> </header> <article> <p>My research focuses on large-scale optimization, with an emphasis on the design and convergence analysis of accelerated first-order methods.</p> <p>Gradient descent is a simple and widely used optimization method, but it can be slow to converge. We can accelerate the convergence of gradient descent using various techniques:</p> <ul> <li> <b>Acceleration</b>: momentum methods, such as Nesterov's accelerated gradient method, which combine the current gradient with the previous step.</li> <li> <b>Mirror descent</b>: replacing the Euclidean geometry with one adapted to the problem.</li> <li> <b>Adaptivity</b>: choosing the step size from information observed during the run, as in the Polyak step, AdaGrad and Adam.</li> </ul> <p>My research aims to combine these techniques in a principled way to design new optimization algorithms that are both fast and robust. Each topic below opens to a short introduction and an interactive demo.</p> <div class="research-topics"> <details> <summary>Acceleration</summary> <p> Consider \(\min_{x \in \mathbb{R}^n} f(x)\), where \(f\) is \(L\)-smooth and \(\mu\)-strongly convex, with condition number \(\kappa = L/\mu\). Gradient descent with step size \(1/L\), $$x_{k+1} = x_k - \tfrac{1}{L} \nabla f(x_k),$$ satisfies \(f(x_k) - f^\star \le (1 - 1/\kappa)^k \, (f(x_0) - f^\star)\). Nesterov's accelerated gradient method adds a momentum step, $$y_k = x_k + \beta (x_k - x_{k-1}), \qquad x_{k+1} = y_k - \tfrac{1}{L} \nabla f(y_k), \qquad \beta = \frac{\sqrt{\kappa} - 1}{\sqrt{\kappa} + 1},$$ and satisfies $$f(x_k) - f^\star \le (1 - 1/\sqrt{\kappa})^k \, \big(f(x_0) - f^\star + \tfrac{\mu}{2} \|x_0 - x^\star\|^2\big).$$ The iteration count to reach accuracy \(\varepsilon\) drops from \(O(\kappa \log(1/\varepsilon))\) to \(O(\sqrt{\kappa} \log(1/\varepsilon))\), which is optimal among first-order methods for this class. </p> <p class="demo-note"> <b>Demo.</b> On \(\mathbb{R}^2\), $$f(x) = \log \sum_i \exp(\langle a_i, x \rangle + c_i) + \tfrac{1}{2}(m_1 x_1^2 + m_2 x_2^2).$$ The \(\kappa\) slider shrinks \(m_1\). \(L\) and \(\mu\) are the extreme Hessian eigenvalues over the plotted region; dashed lines show the two rates. Surface height is \(\sqrt{f - f^\star}\), rescaled, which keeps the level sets. Drag the surface to rotate it; click it to move the starting point. </p> <div class="embed-frame"> <iframe id="nesterov-vs-gd" data-src="/assets/html/nesterov-vs-gd.html" title="Gradient descent vs. Nesterov acceleration"></iframe> </div> </details> <details> <summary>Mirror descent</summary> <p> Let \(h\) be a differentiable convex reference function with Bregman divergence \(D_h(x, y) = h(x) - h(y) - \langle \nabla h(y), x - y \rangle\). Mirror descent replaces the Euclidean proximity term of gradient descent with \(D_h\): $$x_{k+1} = \arg\min_x \big\{ \langle \nabla f(x_k), x \rangle + L \, D_h(x, x_k) \big\} \quad \Longleftrightarrow \quad \nabla h(x_{k+1}) = \nabla h(x_k) - \tfrac{1}{L} \nabla f(x_k).$$ We say \(f\) is \(L\)-smooth and \(\mu\)-strongly convex relative to \(h\) if $$\mu \, D_h(x, y) \le D_f(x, y) \le L \, D_h(x, y) \quad \text{for all } x, y.$$ Under these conditions mirror descent converges linearly, \(f(x_k) - f^\star = O\big((1 - \mu/L)^k\big)\) (Lu, Freund and Nesterov, 2018). With \(h = \tfrac{1}{2}\|x\|^2\) this is gradient descent. The gain comes when \(\kappa = L/\mu\) relative to \(h\) is far smaller than the Euclidean condition number, or when no Euclidean \(L\) exists at all. </p> <p class="demo-note"> <b>Demo.</b> \(f(x) = \tfrac{1}{4}\|Ex\|^4 + \tfrac{1}{4}\|Ax - b\|_4^4 + \tfrac{1}{2}\|Cx - d\|^2\) and \(h(x) = \tfrac{1}{4}\|x\|^4 + \tfrac{1}{2}\|x\|^2\). The Hessian of \(f\) grows without bound, so \(f\) has no global Euclidean \(L\), but it is smooth and strongly convex relative to \(h\). The mirror step inverts \(\nabla h(x) = (1 + \|x\|^2)\,x\) by solving a cubic in \(\|x\|\). Both condition numbers are measured over the plotted region: Euclidean from the eigenvalues of \(\nabla^2 f\), relative from those of \(\nabla^2 h^{-1/2} \nabla^2 f \, \nabla^2 h^{-1/2}\). The slider scales \(A\). Drag the surface to rotate it; click it to move the starting point. </p> <div class="embed-frame"> <iframe id="mirror" data-src="/assets/html/mirror-vs-gd.html" title="Gradient descent vs. mirror descent"></iframe> </div> </details> <details> <summary>Adaptivity</summary> <p> Gradient descent with a fixed step \(\eta\) on a quadratic \(f(x) = \tfrac{1}{2} x^\top H x\) scales the component along each eigenvector of \(H\) by \(1 - \eta \lambda_i\). It is therefore stable only for \(0 \lt \eta \lt 2/L\), and the best fixed step \(\eta^\star = 2/(L + \mu)\) gives the contraction factor \(\rho = (\kappa - 1)/(\kappa + 1)\), so \(f(x_k) - f^\star\) decays like \(\rho^{2k}\). Choosing \(\eta\) well requires knowing \(L\) and \(\mu\). Adaptive methods instead set the step from quantities observed during the run: </p> <ul> <li> <b>Polyak step</b>: \(\displaystyle \eta_k = \frac{f(x_k) - f^\star}{\|\nabla f(x_k)\|^2}\), which needs only \(f^\star\). </li> <li> <b>AdaGrad</b> (diagonal): $$G_{k,i} = \sum_{j \le k} \big(\partial_i f(x_j)\big)^2, \qquad x_{k+1,i} = x_{k,i} - \frac{\eta_0}{\sqrt{G_{k,i}} + \epsilon} \, \partial_i f(x_k).$$ Each coordinate gets its own step. This is mirror descent with the data-dependent reference function \(h_k(x) = \tfrac{1}{2} x^\top \operatorname{diag}(\sqrt{G_k}) \, x\). </li> </ul> <p class="demo-note"> <b>Demo.</b> \(f(x) = \tfrac{1}{2}(\kappa x_1^2 + x_2^2)\), so \(L = \kappa\) and \(\mu = 1\) exactly. The fixed-step slider has ticks at \(\eta^\star\) and \(2/L\); the dashed line is the optimal fixed-step rate \(\rho^{2k}\). The lower panel shows \(\eta_k\), per coordinate for AdaGrad. Drag the surface to rotate it; click it to move the starting point. </p> <div class="embed-frame"> <iframe id="adaptive" data-src="/assets/html/adaptive-rule.html" title="Fixed step gradient descent vs. adaptive gradient descent"></iframe> </div> </details> </div> <style>
+  .research-topics details {
+    border-top: 1px solid var(--global-divider-color);
+    padding: 0.75rem 0;
+  }
+
+  .research-topics details:last-child {
+    border-bottom: 1px solid var(--global-divider-color);
+  }
+
+  .research-topics summary {
+    cursor: pointer;
+    font-size: 1.625rem;
+    font-weight: 600;
+    color: var(--global-theme-color);
+  }
+
+  .research-topics details[open] summary {
+    margin-bottom: 1rem;
+  }
+
+  .research-topics mjx-container[display="true"] {
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .research-topics .demo-note {
+    font-size: 1rem;
+    color: var(--global-text-color-light);
+  }
+
   .embed-frame {
     margin: 1.5rem 0;
   }
@@ -12,33 +42,48 @@
   .embed-frame iframe {
     display: block;
     width: 100%;
-    height: 1250px;
+    height: 900px;
     border: 0;
   }
 </style> <script>
   (function () {
+    // Measure the demo's content rather than the document: scrollHeight never
+    // reports less than the iframe's current height, so it could only grow.
     function fit(frame) {
       try {
         var doc = frame.contentDocument;
-        if (doc && doc.documentElement) {
-          frame.style.height = doc.documentElement.scrollHeight + "px";
+        var wrap = doc && doc.querySelector(".wrap");
+        if (wrap) {
+          var pad = parseFloat(doc.defaultView.getComputedStyle(doc.body).paddingBottom) || 0;
+          frame.style.height = Math.ceil(wrap.getBoundingClientRect().bottom + doc.defaultView.scrollY + pad) + "px";
         }
       } catch (e) {
         /* Keep fallback height. */
       }
     }
 
-    document.querySelectorAll(".embed-frame iframe").forEach(function (frame) {
-      frame.addEventListener("load", function () {
-        fit(frame);
-        setTimeout(function () {
+    // Demos load on first open: a closed <details> has no layout, so a demo
+    // loaded inside one would size its canvases to zero width.
+    document.querySelectorAll(".research-topics details").forEach(function (details) {
+      details.addEventListener("toggle", function () {
+        var frame = details.querySelector("iframe");
+        if (!details.open || !frame) return;
+        if (!frame.getAttribute("src")) {
+          frame.addEventListener("load", function () {
+            fit(frame);
+            setTimeout(function () {
+              fit(frame);
+            }, 300);
+          });
+          frame.setAttribute("src", frame.dataset.src);
+        } else {
           fit(frame);
-        }, 300);
+        }
       });
     });
 
     window.addEventListener("resize", function () {
-      document.querySelectorAll(".embed-frame iframe").forEach(fit);
+      document.querySelectorAll(".embed-frame iframe[src]").forEach(fit);
     });
   })();
 </script> </article> </div> </div> <footer class="fixed-bottom" role="contentinfo"> <div class="container mt-0"> © Copyright 2026 Zeyi Xu. Powered by <a href="https://jekyllrb.com/" target="_blank" rel="external nofollow noopener">Jekyll</a> with <a href="https://github.com/alshedivat/al-folio" rel="external nofollow noopener" target="_blank">al-folio</a> theme. Hosted by <a href="https://pages.github.com/" target="_blank" rel="external nofollow noopener">GitHub Pages</a>. Photos from <a href="https://unsplash.com" target="_blank" rel="external nofollow noopener">Unsplash</a>. </div> </footer> <script>

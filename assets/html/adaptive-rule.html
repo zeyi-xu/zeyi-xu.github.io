@@ -112,8 +112,6 @@
       .panel-label {
         font-family: var(--mono);
         font-size: 11px;
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
         color: var(--faint);
         margin: 0 0 10px;
         display: flex;
@@ -349,7 +347,6 @@
         font-family: var(--mono);
         font-size: 11px;
         letter-spacing: 0.06em;
-        text-transform: uppercase;
         color: var(--muted);
       }
       .slider .num {
@@ -462,36 +459,25 @@
   </head>
   <body>
     <div class="wrap">
-      <header>
-        <p class="eyebrow">First-order methods · adaptive step size</p>
-        <h1><span class="g">A fixed step</span> gambles. <span class="ada">An adaptive step</span> doesn't.</h1>
-        <p class="sub">
-          Minimizing an ill-conditioned quadratic <code>f(x)=½(κ·x₁²+x₂²)</code> on the plane. The Hessian is <code>diag(κ,1)</code>, so gradient
-          descent is stable only for <b>η &lt; 2/L = 2/κ</b> and its best fixed step lives in a sliver just below that cliff — a sliver that narrows
-          as <code>κ</code> grows. An <b style="color: var(--ink)">adaptive</b> rule sets its own step from what it sees each iteration, so it rides
-          the fast edge without you hunting for it. Drag <b>Step size η</b> to feel the knife-edge; the adaptive path never needed the tuning.
-        </p>
-      </header>
-
       <div class="stage">
         <div class="panel">
-          <p class="panel-label">The surface f(x), height = value <span class="hint">drag to rotate · click to move the start</span></p>
+          <p class="panel-label"><span>f(x)</span></p>
           <canvas id="plot"></canvas>
         </div>
 
         <div class="rightcol">
           <div class="panel">
-            <p class="panel-label">Convergence · <span class="hint">f(x_k) − f★ on a log scale</span></p>
+            <p class="panel-label"><span>f(xₖ) − f★</span></p>
             <canvas id="conv"></canvas>
           </div>
           <div class="panel">
-            <p class="panel-label">Step size vs. iteration · <span class="hint" id="steps-hint">η_k</span></p>
+            <p class="panel-label"><span>ηₖ</span><span class="hint" id="steps-hint"></span></p>
             <canvas id="steps"></canvas>
           </div>
-          <div class="geom-note" id="geom-note">measuring the step budget…</div>
+          <div class="geom-note" id="geom-note">—</div>
           <div class="readout">
             <div class="stat gd">
-              <h3><span class="dot gd"></span>Gradient descent · fixed η</h3>
+              <h3><span class="dot gd"></span>Gradient descent</h3>
               <div class="val" id="gd-val">—</div>
               <div class="meta" id="gd-meta">—</div>
             </div>
@@ -534,29 +520,6 @@
             <input type="range" id="iter" min="0" max="220" value="0" step="1" />
           </div>
         </div>
-
-        <p class="caption">
-          The Hessian of <span class="eq">f(x)=½(κx₁²+x₂²)</span> is the constant <span class="eq">diag(κ,1)</span>, so the smoothness and
-          strong-convexity constants are <b>exact</b>: <span class="eq">L=κ</span>, <span class="eq">μ=1</span>, condition number
-          <span class="eq">κ=L/μ</span>. Gradient descent <span class="eq">x₊ = x − η∇f(x)</span> shrinks coordinate <span class="eq">i</span> by
-          <span class="eq">(1−ηλᵢ)</span>, so it is stable only when <span class="eq">0 &lt; η &lt; 2/L</span>. The step slider reads in units of that
-          limit: <span class="eq">η = s·(2/L)</span>, and at <span class="eq">s=1</span> the steep coordinate flips past
-          <span class="eq">−1</span> and <b>diverges</b>. The catch is that the flat coordinate only moves at rate <span class="eq">1−2s/κ</span>, so
-          to make progress you must push <span class="eq">s</span> toward the cliff — the useful band is a sliver of width
-          <span class="eq">~1/κ</span> just below <span class="eq">s=1</span>, centered on the optimum <span class="eq">η★ = 2/(μ+L)</span> with rate
-          <span class="eq">ρ = (κ−1)/(κ+1)</span> (the dashed line on the log panel; <span class="eq">f</span> falls as <span class="eq">ρ²ᵏ</span>).
-          <b>Adaptive rules remove the search.</b> The <b style="color: var(--ada)">Polyak step</b>
-          <span class="eq">ηₖ = (f(xₖ)−f★)/‖∇f(xₖ)‖²</span> keeps GD's direction but sets the length from the gap itself — nothing changes except the
-          step, and it tracks the optimal fixed rate automatically (it does need to know <span class="eq">f★</span>).
-          <b style="color: var(--ada)">AdaGrad</b> <span class="eq">Gᵢ ⟵ Gᵢ + (∂ᵢf)²</span>, <span class="eq">xᵢ₊ = xᵢ − η₀ ∂ᵢf /(√Gᵢ+ε)</span> gives
-          <i>each coordinate</i> its own shrinking step <span class="eq">η₀/√Gᵢ</span> (the lower panel), which drops faster on the steep coordinate
-          and effectively pre-conditions the geometry — it can beat any scalar fixed step early, though on a pure quadratic its
-          <span class="eq">√k</span> decay eventually slows it, and the rescaling is tied to the coordinate frame. That last method is exactly
-          <b>mirror descent under a data-dependent metric</b> — the Bregman term built from <span class="eq">diag(√Gₖ)</span> — the same
-          adaptive-geometry idea as the mirror-descent page, here read as a self-adjusting step. Faint dashed line on the log panel is the optimal
-          fixed-step rate <span class="eq">ρ²ᵏ</span>; drag <b>κ</b> to widen the gap and watch the fixed sliver thin. Drag the surface to orbit;
-          click it to move the start.
-        </p>
       </div>
     </div>
 
@@ -1123,7 +1086,7 @@
             const mSteep = Math.abs(1 - 2 * state.s);
             const mFlat = Math.abs(1 - (2 * state.s) / state.kappa);
             const worst = Math.max(mSteep, mFlat);
-            gdMeta = `η=${state.etaFixed.toFixed(3)} = ${state.s.toFixed(2)}·(2/L) · slow rate ${worst.toFixed(3)}/step`;
+            gdMeta = `η=${state.etaFixed.toFixed(3)} · rate ${worst.toFixed(3)}`;
           }
           document.getElementById("gd-meta").innerHTML = gdMeta;
 
@@ -1131,8 +1094,8 @@
           const aK = state.convK_Ada;
           const stepNow = state.stepAda[Math.max(k, 1)] ?? state.stepAda[1];
           let stepStr;
-          if (state.rule === "polyak") stepStr = `η_k=${(stepNow ?? 0).toFixed(3)}`;
-          else stepStr = `η_k≈(${(stepNow?.x ?? 0).toFixed(3)}, ${(stepNow?.y ?? 0).toFixed(3)})`;
+          if (state.rule === "polyak") stepStr = `ηₖ=${(stepNow ?? 0).toFixed(3)}`;
+          else stepStr = `ηₖ≈(${(stepNow?.x ?? 0).toFixed(3)}, ${(stepNow?.y ?? 0).toFixed(3)})`;
           document.getElementById("ada-meta").innerHTML =
             aK >= 0 && k >= aK ? `<span class="conv-flag">✓ reached 10⁻⁸ at k=${aK}</span> · ${stepStr}` : stepStr;
 
@@ -1141,11 +1104,8 @@
           const cliff = 2 / kap;
           const etaStar = 2 / (MU + kap);
           document.getElementById("geom-note").innerHTML =
-            `Stable only for <span class="kg">η &lt; 2/L = ${cliff.toFixed(3)}</span>. ` +
-            `Optimal <span class="kn">η★ = 2/(μ+L) = ${etaStar.toFixed(3)}</span>, rate <span class="kn">(κ−1)/(κ+1) = ${(
-              (kap - 1) /
-              (kap + 1)
-            ).toFixed(3)}</span>. The fast band is a sliver just under the cliff.`;
+            `<span class="kg">2/L = ${cliff.toFixed(3)}</span> · ` +
+            `<span class="kn">η★ = ${etaStar.toFixed(3)}</span> · <span class="kn">ρ = ${((kap - 1) / (kap + 1)).toFixed(3)}</span>`;
 
           document.getElementById("iter").value = k;
           document.getElementById("iter-num").textContent = k;
@@ -1256,7 +1216,7 @@
           state.rule = btn.dataset.rule;
           [...e.currentTarget.children].forEach((b) => b.classList.toggle("active", b === btn));
           document.getElementById("ada-title").textContent = state.rule === "polyak" ? "Polyak step" : "AdaGrad";
-          document.getElementById("steps-hint").textContent = state.rule === "polyak" ? "η_k (scalar)" : "η₀/√G per coordinate — steep vs. flat";
+          document.getElementById("steps-hint").textContent = state.rule === "polyak" ? "" : "per coordinate";
           setPlaying(false);
           rebuild();
         });
@@ -1389,7 +1349,7 @@
         // ---- go ---------------------------------------------------------------
         syncEtaLabel();
         document.getElementById("ada-title").textContent = "Polyak step";
-        document.getElementById("steps-hint").textContent = "η_k (scalar)";
+        document.getElementById("steps-hint").textContent = "";
         rebuild();
         requestAnimationFrame(loop);
         if (!state.prefersReduced) setTimeout(() => setPlaying(true), 400);
