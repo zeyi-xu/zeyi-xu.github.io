@@ -148,6 +148,21 @@ body {
   padding-bottom: 0;
 }
 
+// The homepage's selected publications drop the venue badge column. It takes
+// a sixth of the row for a one-word label, which squeezes the titles. The full
+// publications page keeps it. The wrapper class comes from _pages/about.md;
+// the entry column is col-sm-8, so widen it to fill the freed space.
+.selected-papers .publications {
+  .abbr {
+    display: none;
+  }
+
+  ol.bibliography li .row > [id] {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+}
+
 // The theme ships no responsive type at all, so a 44px h1 would hit a 390px
 // phone at full size. Step the two largest levels down on small screens; the
 // rest of the scale is already comfortable there.

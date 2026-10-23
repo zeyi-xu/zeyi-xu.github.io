@@ -38,7 +38,9 @@ I am a PhD student in the [Department of Mathematics](https://www.math.uci.edu/)
 
 <h2 style="clear: both"><a href="{{ '/publications/' | relative_url }}" style="color: inherit">selected publications</a></h2>
 
+<div class="selected-papers">
 {% include selected_papers.liquid %}
+</div>
 
 ## talks & conferences
 
