@@ -40,8 +40,10 @@ I am a PhD student in the [Department of Mathematics](https://www.math.uci.edu/)
 
 {% include selected_papers.liquid %}
 
-## conferences
+## talks & conferences
 
+- **SIAM MDS26** (upcoming) — SIAM Conference on Mathematics of Data Science, Salt Lake City, UT, November 16, 2026. Minisymposium talk: _Accelerating Structured First-Order Methods: From Sinkhorn's Algorithm to Conditional Gradient_.
+- **UC Irvine Applied & Computational Mathematics Seminar** (upcoming) — University of California, Irvine, November 9, 2026. Seminar talk: _Accelerating Structured First-Order Methods: From Sinkhorn's Algorithm to Conditional Gradient_.
 - **[SOCAMS 2026](https://www.socams.org/)** — Southern California Applied Mathematics Symposium, Loyola Marymount University, Los Angeles, CA, April 25, 2026. Contributed talk: _Accelerating Sinkhorn for Entropy-Regularized Optimal Transport_.
 - **[SOCAMS 2025](https://www.socams.org/)** — Southern California Applied Mathematics Symposium, University of California, Riverside, April 26, 2025. Contributed talk: _Adaptive Accelerated Gradient Descent Methods for Convex Optimization_.
 - **[NSF–CBMS Regional Research Conference](https://cbmsweb.org/regional-conferences/conference-series-events-2023/)** — _Deep Learning and Numerical PDEs_, Morgan State University, Baltimore, MD, June 19–23, 2023.
