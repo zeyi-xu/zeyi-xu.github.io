@@ -34,7 +34,7 @@ Put your address / P.O. box / other info right below your picture. You can also 
 
 Link to your social media connections, too. This theme is set up to use [Font Awesome icons](https://fontawesome.com/) and [Academicons](https://jpswalsh.github.io/academicons/), like the ones below. Add your Facebook, Twitter, LinkedIn, Google Scholar, or just disable all of them. -->
 
-I am a PhD student in the [Department of Mathematics](https://www.math.uci.edu/) at the [University of California, Irvine](https://uci.edu/), advised by [Professor Long Chen](https://www.math.uci.edu/~chenlong/). My research focuses on large-scale optimization and its applications, with an emphasis on the design and convergence analysis of accelerated first-order methods. I am also interested in applications of optimization to areas such as optimal transport and sampling. Feel free to reach out via email—I am always happy to discuss research and potential collaborations.
+I am a PhD student in the [Department of Mathematics](https://www.math.uci.edu/) at the [University of California, Irvine](https://uci.edu/), advised by [Professor Long Chen](https://www.math.uci.edu/~chenlong/). My research focuses on large-scale optimization and its applications, with an emphasis on the design and convergence analysis of accelerated first-order methods. I am also interested in applications of optimization to areas such as optimal transport and sampling. **I am currently looking for postdoctoral positions.** Feel free to reach out via email—I am always happy to discuss research and potential collaborations.
 
 <h2 style="clear: both"><a href="{{ '/publications/' | relative_url }}" style="color: inherit">selected publications</a></h2>
 

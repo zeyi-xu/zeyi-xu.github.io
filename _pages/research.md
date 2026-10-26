@@ -6,17 +6,57 @@ nav: true
 nav_order: 1
 ---
 
-<p>My research focuses on large-scale optimization, with an emphasis on the design and convergence analysis of accelerated first-order methods.</p>
+## overview
 
-<p>Gradient descent is a simple and widely used optimization method, but it can be slow to converge. We can accelerate the convergence of gradient descent using various techniques:</p>
+<p>
+  Optimization is the computational engine of data science and machine learning. Training a model, matching one data distribution to another, and
+  simulating how a system evolves all come down to minimizing a function. The workhorse algorithms are first-order methods, which use only
+  gradients. They are simple and scale to very large problems, but they slow down dramatically on poorly conditioned problems, which are much
+  steeper in some directions than in others.
+</p>
+
+<p>
+  Three ideas make these methods fast in practice. <em>Acceleration</em> uses momentum to reach a solution in far fewer steps.
+  <em>Preconditioning</em>, of which mirror descent is one form, changes the geometry of the problem so that it becomes easier to solve.
+  <em>Adaptivity</em> tunes the step size and other parameters during the run, instead of relying on constants that are rarely known in advance.
+  These ideas are usually designed and analyzed one at a time.
+</p>
+
+<p>
+  My research develops a single framework that combines all three, which I call the <em>accelerated adaptive mirror</em> (AAM) framework. It views
+  an algorithm as a time-stepping scheme for a continuous-time process, and uses a quantity that decreases along that process, a Lyapunov function,
+  to design the algorithm, choose its parameters, and prove how fast it converges. This turns widely used algorithms into much faster ones that
+  stay as simple as the originals. The main results so far are:
+</p>
 
 <ul>
-  <li><b>Acceleration</b>: momentum methods, such as Nesterov's accelerated gradient method, which combine the current gradient with the previous step.</li>
-  <li><b>Mirror descent</b>: replacing the Euclidean geometry with one adapted to the problem.</li>
-  <li><b>Adaptivity</b>: choosing the step size from information observed during the run, as in the Polyak step, AdaGrad and Adam.</li>
+  <li>
+    <b>A unified theory</b> of acceleration, adaptivity, and preconditioning, including <a href="https://arxiv.org/abs/2606.02787">AAMD</a>, a
+    method that provably combines all three.
+  </li>
+  <li>
+    <b><a href="https://arxiv.org/abs/2605.30267">Acc-Sinkhorn</a></b>, a faster version of the Sinkhorn algorithm for optimal transport, the
+    standard tool for comparing and matching probability distributions. Each step costs the same as a Sinkhorn step, and the speedup grows on the
+    hardest problems, where Sinkhorn is slowest.
+  </li>
+  <li>
+    <b><a href="https://arxiv.org/abs/2610.25473">AGCG</a></b>, an accelerated method for Wasserstein gradient flows, which describe how a
+    distribution of mass, such as a granular material, evolves over time. As the problem gets harder, its cost grows like the square root of the
+    difficulty, while that of existing adaptive methods grows almost in proportion to it.
+  </li>
+  <li>
+    <b>Generative modeling.</b> In recent experiments, Acc-Sinkhorn cut the training time of a class of image-generation models, one-step
+    flow-matching models, by about 30%.
+  </li>
 </ul>
 
-<p>My research aims to combine these techniques in a principled way to design new optimization algorithms that are both fast and robust. Each topic below opens to a short introduction and an interactive demo.</p>
+<figure class="research-map">
+  <img src="{{ '/assets/img/research-map.svg' | relative_url }}" alt="Research map: the AAM framework (HNAG++, A2GD, Acc-MD, AAMD) leads to Acc-Sinkhorn, AGCG and the ongoing Acc-NGD, with applications to entropic optimal transport and flow matching, Wasserstein gradient flows, and information theory and experimental design.">
+</figure>
+
+## interactive demos
+
+<p>Each topic below opens to a short introduction and an interactive demo.</p>
 
 <div class="research-topics">
 <details>
@@ -123,6 +163,21 @@ nav_order: 1
 </div>
 
 <style>
+  /* The map has dark labels on a transparent background, so it keeps a light
+     card in both themes. */
+  .research-map {
+    margin: 1.5rem 0;
+    padding: 0.75rem;
+    background: #fff;
+    border-radius: 6px;
+  }
+
+  .research-map img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
   .research-topics details {
     border-top: 1px solid var(--global-divider-color);
     padding: 0.75rem 0;
