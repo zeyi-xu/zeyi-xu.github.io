@@ -42,6 +42,11 @@ I am a PhD candidate in the [Department of Mathematics](https://www.math.uci.edu
 {% include selected_papers.liquid %}
 </div>
 
+## education
+
+- **[University of California, Irvine](https://uci.edu/)** — Ph.D. in Mathematics, Irvine, CA, September 2022 – June 2027 (expected). Advisor: [Professor Long Chen](https://www.math.uci.edu/~chenlong/).
+- **[Fudan University](https://www.fudan.edu.cn/en/)** — B.S. in Mathematics with honors, Shanghai, China, September 2018 – June 2022.
+
 ## talks & conferences
 
 - **SIAM MDS26** (upcoming) — SIAM Conference on Mathematics of Data Science, Salt Lake City, UT, November 16, 2026. Minisymposium talk: _Accelerating Structured First-Order Methods: From Sinkhorn's Algorithm to Conditional Gradient_.
