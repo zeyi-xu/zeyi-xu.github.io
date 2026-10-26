@@ -34,18 +34,13 @@ Put your address / P.O. box / other info right below your picture. You can also 
 
 Link to your social media connections, too. This theme is set up to use [Font Awesome icons](https://fontawesome.com/) and [Academicons](https://jpswalsh.github.io/academicons/), like the ones below. Add your Facebook, Twitter, LinkedIn, Google Scholar, or just disable all of them. -->
 
-I am a PhD candidate in the [Department of Mathematics](https://www.math.uci.edu/) at the [University of California, Irvine](https://uci.edu/), advised by [Professor Long Chen](https://www.math.uci.edu/~chenlong/). I design fast and reliable optimization algorithms for data science and machine learning. My work brings together three ideas that make first-order methods fast in practice (acceleration, adaptivity, and preconditioning) in a single framework built on continuous-time dynamics. I use it to speed up widely used algorithms, such as the Sinkhorn algorithm for optimal transport, with applications to Wasserstein gradient flows and generative modeling. You can read more on my [research page]({{ '/research/' | relative_url }}). I am on the postdoc job market this year and would love to hear about opportunities. Feel free to reach out by email—I am always happy to chat about research and potential collaborations.
+I am a PhD candidate in the [Department of Mathematics](https://www.math.uci.edu/) at the [University of California, Irvine](https://uci.edu/), advised by [Professor Long Chen](https://www.math.uci.edu/~chenlong/). Prior to UC Irvine, I received my B.S. in Mathematics from [Fudan University](https://www.fudan.edu.cn/en/) in Shanghai, China. I design fast and reliable optimization algorithms for data science and machine learning. My work brings together three ideas that make first-order methods fast in practice (acceleration, adaptivity, and preconditioning) in a single framework built on continuous-time dynamics. I use it to speed up widely used algorithms, such as the Sinkhorn algorithm for optimal transport, with applications to Wasserstein gradient flows and generative modeling. You can read more on my [research page]({{ '/research/' | relative_url }}). I am on the postdoc job market this year and would love to hear about opportunities. Feel free to reach out by email—I am always happy to chat about research and potential collaborations.
 
 <h2 style="clear: both"><a href="{{ '/publications/' | relative_url }}" style="color: inherit">selected publications</a></h2>
 
 <div class="selected-papers">
 {% include selected_papers.liquid %}
 </div>
-
-## education
-
-- **[University of California, Irvine](https://uci.edu/)** — Ph.D. in Mathematics, Irvine, CA, September 2022 – June 2027 (expected). Advisor: [Professor Long Chen](https://www.math.uci.edu/~chenlong/).
-- **[Fudan University](https://www.fudan.edu.cn/en/)** — B.S. in Mathematics with honors, Shanghai, China, September 2018 – June 2022.
 
 ## talks & conferences
 
