@@ -38,8 +38,13 @@ I am a PhD candidate in the [Department of Mathematics](https://www.math.uci.edu
 
 <h2 style="clear: both"><a href="{{ '/publications/' | relative_url }}" style="color: inherit">selected publications</a></h2>
 
+<!-- Order: the JOTA paper first, the remaining selected papers in bibliography order, then the CAMWA paper last. -->
 <div class="selected-papers">
-{% include selected_papers.liquid %}
+<div class="publications">
+{% bibliography --group_by none --query @*[key=xu2025hnag] %}
+{% bibliography --group_by none --query @*[selected=true,key!=xu2025hnag,key!=yu2026adam_hnag] %}
+{% bibliography --group_by none --query @*[key=yu2026adam_hnag] %}
+</div>
 </div>
 
 ## talks & conferences
